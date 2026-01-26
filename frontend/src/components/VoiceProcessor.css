@@ -1,0 +1,320 @@
+/* Voice Processor Component Styles */
+.voice-processor {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.voice-processor h3 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+/* Language Selector */
+.language-selector {
+  margin-bottom: 20px;
+}
+
+.language-selector label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #34495e;
+}
+
+.language-selector select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  transition: border-color 0.3s ease;
+}
+
+.language-selector select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Button Styles */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0 8px 8px 0;
+  display: inline-block;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2980b9;
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #7f8c8d;
+}
+
+.btn-success {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #229954;
+}
+
+.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+  background: #138496;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #6c757d;
+  border: 2px solid #6c757d;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #6c757d;
+  color: white;
+}
+
+/* Speech Controls */
+.speech-controls {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Status Indicator */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #e8f5e8;
+  border-radius: 8px;
+  color: #27ae60;
+  font-weight: 500;
+}
+
+.listening-animation {
+  width: 20px;
+  height: 20px;
+  background: #27ae60;
+  border-radius: 50%;
+  margin-right: 10px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Transcript Section */
+.transcript-section {
+  margin-bottom: 20px;
+}
+
+.transcript-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #34495e;
+}
+
+.transcript-section textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.3s ease;
+}
+
+.transcript-section textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.transcript-section textarea:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+/* TTS Controls */
+.tts-controls {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Audio Player */
+.audio-player {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.audio-player audio {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+}
+
+/* Error Message */
+.error-message {
+  background: #fdf2f2;
+  color: #e74c3c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #e74c3c;
+  margin-bottom: 20px;
+}
+
+.voice-processor.error .error-message {
+  background: #fdf2f2;
+  color: #e74c3c;
+  padding: 20px;
+  text-align: center;
+  border-radius: 8px;
+  border: 2px solid #e74c3c;
+}
+
+/* Instructions */
+.instructions {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+}
+
+.instructions h4 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.instructions ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.instructions li {
+  margin-bottom: 8px;
+  color: #34495e;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .voice-processor {
+    margin: 10px;
+    padding: 15px;
+  }
+  
+  .btn {
+    display: block;
+    width: 100%;
+    margin: 0 0 10px 0;
+  }
+  
+  .speech-controls .btn {
+    display: inline-block;
+    width: auto;
+    margin: 0 4px 8px 0;
+  }
+  
+  .tts-controls .btn {
+    display: inline-block;
+    width: auto;
+    margin: 0 4px 8px 0;
+  }
+}
+
+/* Indian Cultural Theme */
+.voice-processor {
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  border-top: 4px solid #ff9933; /* Saffron */
+}
+
+.voice-processor h3 {
+  background: linear-gradient(45deg, #ff9933, #138808, #000080);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Accessibility */
+.btn:focus {
+  outline: 3px solid rgba(52, 152, 219, 0.5);
+  outline-offset: 2px;
+}
+
+.language-selector select:focus,
+.transcript-section textarea:focus {
+  outline: 3px solid rgba(52, 152, 219, 0.5);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .voice-processor {
+    border: 2px solid #000;
+  }
+  
+  .btn {
+    border: 2px solid currentColor;
+  }
+}

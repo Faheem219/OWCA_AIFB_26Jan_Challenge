@@ -1,1 +1,953 @@
+/* Import Google Fonts for Indian Languages */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700&family=Noto+Sans+Tamil:wght@300;400;500;600;700&family=Noto+Sans+Telugu:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Noto+Sans+Gujarati:wght@300;400;500;600;700&family=Noto+Sans+Kannada:wght@300;400;500;600;700&family=Noto+Sans+Malayalam:wght@300;400;500;600;700&family=Noto+Sans+Oriya:wght@300;400;500;600;700&family=Noto+Sans+Gurmukhi:wght@300;400;500;600;700&display=swap');
+
 @import "tailwindcss";
+
+/* Cultural Color Palette - Indian Tricolor and Regional Colors */
+:root {
+  /* Indian Tricolor */
+  --saffron: #FF9933;
+  --white: #FFFFFF;
+  --green: #138808;
+  --navy-blue: #000080;
+
+  /* Regional Cultural Colors */
+  --golden-yellow: #FFD700;
+  --deep-orange: #FF6B35;
+  --royal-blue: #4169E1;
+  --emerald-green: #50C878;
+  --crimson-red: #DC143C;
+  --warm-brown: #8B4513;
+
+  /* Cultural Accent Colors */
+  --marigold: #FFA500;
+  --turmeric: #E4D00A;
+  --henna: #B85450;
+  --peacock-blue: #005F69;
+  --lotus-pink: #F8BBD9;
+
+  /* Gradient Combinations */
+  --cultural-gradient: linear-gradient(135deg, var(--saffron) 0%, var(--white) 50%, var(--green) 100%);
+  --sunset-gradient: linear-gradient(135deg, var(--deep-orange) 0%, var(--golden-yellow) 100%);
+  --heritage-gradient: linear-gradient(135deg, var(--royal-blue) 0%, var(--peacock-blue) 100%);
+}
+
+/* Vernacular Typography Classes */
+.font-devanagari {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+}
+
+.font-tamil {
+  font-family: 'Noto Sans Tamil', sans-serif;
+}
+
+.font-telugu {
+  font-family: 'Noto Sans Telugu', sans-serif;
+}
+
+.font-bengali {
+  font-family: 'Noto Sans Bengali', sans-serif;
+}
+
+.font-gujarati {
+  font-family: 'Noto Sans Gujarati', sans-serif;
+}
+
+.font-kannada {
+  font-family: 'Noto Sans Kannada', sans-serif;
+}
+
+.font-malayalam {
+  font-family: 'Noto Sans Malayalam', sans-serif;
+}
+
+.font-oriya {
+  font-family: 'Noto Sans Oriya', sans-serif;
+}
+
+.font-gurmukhi {
+  font-family: 'Noto Sans Gurmukhi', sans-serif;
+}
+
+/* Cultural Motif Patterns */
+.cultural-pattern-border {
+  border-image: repeating-linear-gradient(45deg,
+      var(--saffron) 0px,
+      var(--saffron) 10px,
+      var(--white) 10px,
+      var(--white) 20px,
+      var(--green) 20px,
+      var(--green) 30px) 1;
+}
+
+.mandala-pattern {
+  background-image: radial-gradient(circle at center,
+      transparent 20%,
+      var(--golden-yellow) 20%,
+      var(--golden-yellow) 25%,
+      transparent 25%,
+      transparent 45%,
+      var(--saffron) 45%,
+      var(--saffron) 50%,
+      transparent 50%);
+  background-size: 40px 40px;
+}
+
+.paisley-accent {
+  position: relative;
+}
+
+.paisley-accent::before {
+  content: '🌿';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-size: 1.2em;
+  opacity: 0.7;
+}
+
+/* App Layout with Cultural Design */
+.app {
+  min-height: 100vh;
+  background: var(--heritage-gradient);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.app::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(255, 153, 51, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(19, 136, 8, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.app-header {
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  border-bottom: 3px solid var(--saffron);
+  position: relative;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--saffron) 33%, var(--white) 33%, var(--white) 66%, var(--green) 66%);
+}
+
+.app-header h1 {
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+  font-weight: 700;
+  position: relative;
+}
+
+.app-header h1::after {
+  content: '🇮🇳';
+  margin-left: 10px;
+  font-size: 0.8em;
+}
+
+.cultural-title {
+  background: linear-gradient(45deg, var(--saffron), var(--golden-yellow), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-nav {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--saffron);
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.2), rgba(255, 215, 0, 0.2));
+  color: white;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.nav-btn:hover::before {
+  left: 100%;
+}
+
+.nav-btn:hover {
+  background: linear-gradient(135deg, var(--saffron), var(--golden-yellow));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 153, 51, 0.4);
+  border-color: var(--golden-yellow);
+}
+
+.nav-btn.active {
+  background: linear-gradient(135deg, var(--deep-orange), var(--saffron));
+  border-color: var(--deep-orange);
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.6);
+  color: white;
+}
+
+.nav-btn.active::after {
+  content: '✨';
+  margin-left: 8px;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.app-footer {
+  text-align: center;
+  padding: 20px;
+  color: white;
+  opacity: 0.9;
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.2), rgba(19, 136, 8, 0.2));
+  backdrop-filter: blur(15px);
+  border-top: 2px solid var(--golden-yellow);
+  position: relative;
+}
+
+.app-footer::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--saffron) 33%, var(--white) 33%, var(--white) 66%, var(--green) 66%);
+}
+
+/* Cultural UI Components */
+.cultural-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--golden-yellow);
+  position: relative;
+  overflow: hidden;
+}
+
+.cultural-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--saffron), var(--golden-yellow), var(--green));
+}
+
+.cultural-button {
+  background: linear-gradient(135deg, var(--saffron), var(--golden-yellow));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.cultural-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 153, 51, 0.4);
+  background: linear-gradient(135deg, var(--deep-orange), var(--saffron));
+}
+
+.cultural-button:active {
+  transform: translateY(0);
+}
+
+.cultural-input {
+  border: 2px solid var(--golden-yellow);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.cultural-input:focus {
+  outline: none;
+  border-color: var(--saffron);
+  box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.2);
+  background: white;
+}
+
+/* Language Selector Styling */
+.language-selector {
+  background: linear-gradient(135deg, var(--peacock-blue), var(--royal-blue));
+  color: white;
+  border: 2px solid var(--golden-yellow);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.language-selector:hover {
+  background: linear-gradient(135deg, var(--royal-blue), var(--peacock-blue));
+  transform: scale(1.05);
+}
+
+/* Cultural Status Indicators */
+.status-online {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.status-offline {
+  color: var(--crimson-red);
+  font-weight: 600;
+}
+
+.status-connecting {
+  color: var(--saffron);
+  font-weight: 600;
+}
+
+/* Cultural Animations */
+@keyframes cultural-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 153, 51, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 153, 51, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 153, 51, 0);
+  }
+}
+
+.cultural-pulse {
+  animation: cultural-pulse 2s infinite;
+}
+
+@keyframes tricolor-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.tricolor-shimmer {
+  background: linear-gradient(90deg, var(--saffron) 25%, var(--white) 50%, var(--green) 75%);
+  background-size: 200% 100%;
+  animation: tricolor-shimmer 3s ease-in-out infinite;
+}
+
+/* Responsive adjustments with cultural design */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 15px;
+  }
+
+  .app-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+  }
+
+  .nav-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    margin: 0.25rem;
+  }
+
+  .cultural-card {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  .cultural-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-nav {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nav-btn {
+    width: 200px;
+    text-align: center;
+  }
+
+  .app-header h1 {
+    font-size: 1.25rem;
+  }
+}
+
+/* High contrast mode for accessibility */
+@media (prefers-contrast: high) {
+  :root {
+    --saffron: #FF8C00;
+    --green: #006400;
+    --golden-yellow: #FFD700;
+  }
+
+  .cultural-button {
+    border: 2px solid var(--navy-blue);
+  }
+
+  .cultural-input {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+  .nav-btn,
+  .cultural-button,
+  .language-selector {
+    transition: none;
+  }
+
+  .cultural-pulse,
+  .tricolor-shimmer {
+    animation: none;
+  }
+
+  .nav-btn:hover,
+  .cultural-button:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode support with cultural colors */
+@media (prefers-color-scheme: dark) {
+  .cultural-card {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-color: var(--golden-yellow);
+  }
+
+  .cultural-input {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: var(--saffron);
+  }
+
+  .cultural-input:focus {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* VocalForLocal Integration Styles */
+.vocal-for-local {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  margin: 20px;
+  padding: 0;
+  min-height: calc(100vh - 200px);
+}
+
+/* Utility classes for VocalForLocal */
+.text-saffron {
+  color: var(--saffron);
+}
+
+.text-green {
+  color: var(--green);
+}
+
+.text-peacock-blue {
+  color: var(--peacock-blue);
+}
+
+.text-turmeric {
+  color: var(--turmeric);
+}
+
+.text-crimson-red {
+  color: var(--crimson-red);
+}
+
+.bg-saffron {
+  background-color: var(--saffron);
+}
+
+.bg-green {
+  background-color: var(--green);
+}
+
+.bg-peacock-blue {
+  background-color: var(--peacock-blue);
+}
+
+.bg-turmeric {
+  background-color: var(--turmeric);
+}
+
+.bg-white {
+  background-color: var(--white);
+}
+
+.border-saffron {
+  border-color: var(--saffron);
+}
+
+.border-green {
+  border-color: var(--green);
+}
+
+.border-peacock-blue {
+  border-color: var(--peacock-blue);
+}
+
+.border-turmeric {
+  border-color: var(--turmeric);
+}
+
+.hover\:bg-saffron:hover {
+  background-color: var(--saffron);
+}
+
+.hover\:text-white:hover {
+  color: var(--white);
+}
+
+.hover\:text-saffron:hover {
+  color: var(--saffron);
+}
+
+.hover\:bg-emerald-green:hover {
+  background-color: var(--emerald-green);
+}
+
+.hover\:bg-golden-yellow:hover {
+  background-color: var(--golden-yellow);
+}
+
+/* Grid utilities */
+.grid {
+  display: grid;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.gap-6 {
+  gap: 1.5rem;
+}
+
+/* Flex utilities */
+.flex {
+  display: flex;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.space-x-1> :not([hidden])~ :not([hidden]) {
+  margin-left: 0.25rem;
+}
+
+.space-x-2> :not([hidden])~ :not([hidden]) {
+  margin-left: 0.5rem;
+}
+
+.space-y-3> :not([hidden])~ :not([hidden]) {
+  margin-top: 0.75rem;
+}
+
+.space-y-6> :not([hidden])~ :not([hidden]) {
+  margin-top: 1.5rem;
+}
+
+/* Spacing utilities */
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.mr-3 {
+  margin-right: 0.75rem;
+}
+
+.ml-3 {
+  margin-left: 0.75rem;
+}
+
+.ml-4 {
+  margin-left: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.p-8 {
+  padding: 2rem;
+}
+
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.py-1\.5 {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+/* Text utilities */
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+/* Border utilities */
+.border {
+  border-width: 1px;
+}
+
+.border-2 {
+  border-width: 2px;
+}
+
+.border-l-4 {
+  border-left-width: 4px;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.rounded-md {
+  border-radius: 0.375rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.rounded-r-lg {
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Opacity utilities */
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.opacity-70 {
+  opacity: 0.7;
+}
+
+/* Cursor utilities */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+/* Width utilities */
+.w-full {
+  width: 100%;
+}
+
+.w-6 {
+  width: 1.5rem;
+}
+
+.w-12 {
+  width: 3rem;
+}
+
+.w-16 {
+  width: 4rem;
+}
+
+/* Height utilities */
+.h-1 {
+  height: 0.25rem;
+}
+
+.h-6 {
+  height: 1.5rem;
+}
+
+.h-12 {
+  height: 3rem;
+}
+
+.h-16 {
+  height: 4rem;
+}
+
+/* Shadow utilities */
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Animation utilities */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.duration-300 {
+  transition-duration: 300ms;
+}
