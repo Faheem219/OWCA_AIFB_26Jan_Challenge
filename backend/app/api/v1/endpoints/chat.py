@@ -3,10 +3,9 @@ Chat and messaging endpoints for real-time communication.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Annotated
 from datetime import datetime, timedelta
 import uuid
-from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.core.database import get_database
 from app.core.dependencies import get_current_user
@@ -82,8 +81,8 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
 
 @router.get("/conversations")
 async def get_conversations(
-    current_user: UserProfile = Depends(get_current_user),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Get user's chat conversations."""
     try:
@@ -130,8 +129,8 @@ async def get_conversations(
 @router.post("/conversations")
 async def create_conversation(
     conversation_data: Dict[str, Any],
-    current_user: UserProfile = Depends(get_current_user),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Create a new chat conversation."""
     try:
@@ -177,10 +176,10 @@ async def create_conversation(
 @router.get("/conversations/{conversation_id}/messages")
 async def get_messages(
     conversation_id: str,
+    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    db: Annotated[Any, Depends(get_database)],
     limit: int = 50,
-    skip: int = 0,
-    current_user: UserProfile = Depends(get_current_user),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    skip: int = 0
 ) -> Dict[str, Any]:
     """Get messages from a conversation."""
     try:
@@ -222,8 +221,8 @@ async def get_messages(
 async def send_message(
     conversation_id: str,
     message_data: Dict[str, Any],
-    current_user: UserProfile = Depends(get_current_user),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Send a message in a conversation."""
     try:
@@ -288,8 +287,8 @@ async def send_message(
 async def make_offer(
     conversation_id: str,
     offer_data: Dict[str, Any],
-    current_user: UserProfile = Depends(get_current_user),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Make a price offer in a conversation."""
     try:
@@ -349,8 +348,8 @@ async def make_offer(
 async def respond_to_offer(
     offer_id: str,
     response_data: Dict[str, Any],
-    current_user: UserProfile = Depends(get_current_user),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Accept, reject, or counter an offer."""
     try:
