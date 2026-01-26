@@ -1,0 +1,55 @@
+# FastAPI and core dependencies
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+websockets
+
+# Database dependencies
+motor  # Async MongoDB driver
+pymongo
+redis
+
+# Authentication and security
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+
+# AWS services
+boto3
+botocore
+
+# HTTP client for external APIs
+httpx
+aiohttp
+
+# Payment processing
+razorpay
+stripe
+requests
+
+# Audio processing
+pydub
+aiofiles
+
+# Background tasks and scheduling
+celery
+celery[redis]
+apscheduler
+
+# Validation and utilities
+email-validator
+python-dotenv
+typing-extensions
+
+# Testing dependencies
+pytest
+pytest-asyncio
+pytest-mock
+hypothesis
+
+# Development dependencies
+black
+isort
+flake8
+mypy
