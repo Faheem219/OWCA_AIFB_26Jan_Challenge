@@ -1,0 +1,297 @@
+import {
+    User,
+    SupportedLanguage,
+    UserRole,
+    LocationData
+} from '../types'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
+
+export interface LoginRequest {
+    email: string
+    password: string
+}
+
+export interface RegisterRequest {
+    email: string
+    password: string
+    role: UserRole
+    preferred_languages: SupportedLanguage[]
+    phone?: string
+    business_name?: string
+    location: LocationData
+}
+
+export interface AuthResponse {
+    access_token: string
+    refresh_token: string
+    token_type: string
+    expires_in: number
+    user: User
+}
+
+export interface GoogleAuthRequest {
+    id_token: string
+    role?: UserRole
+    preferred_languages?: SupportedLanguage[]
+}
+
+export interface AadhaarAuthRequest {
+    aadhaar_number: string
+    otp: string
+    role: UserRole
+    preferred_languages: SupportedLanguage[]
+}
+
+export interface VerificationRequest {
+    user_id: string
+    verification_code: string
+    verification_type: 'email' | 'phone'
+}
+
+export interface PasswordResetRequest {
+    email: string
+}
+
+export interface PasswordResetConfirmRequest {
+    token: string
+    new_password: string
+}
+
+class AuthService {
+    private getAuthHeaders(): Record<string, string> {
+        const token = localStorage.getItem('accessToken')
+        return {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` })
+        }
+    }
+
+    async login(credentials: LoginRequest): Promise<AuthResponse> {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(credentials),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Login failed')
+        }
+
+        return response.json()
+    }
+
+    async register(userData: RegisterRequest): Promise<{ user_id: string; message: string; requires_verification: boolean; verification_method?: string }> {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Registration failed')
+        }
+
+        return response.json()
+    }
+
+    async loginWithGoogle(credentials: GoogleAuthRequest): Promise<AuthResponse> {
+        const response = await fetch(`${API_BASE_URL}/auth/oauth/google`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(credentials),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            if (response.status === 202) {
+                // User needs to complete registration
+                throw new Error('REGISTRATION_REQUIRED')
+            }
+            throw new Error(error.detail || 'Google authentication failed')
+        }
+
+        return response.json()
+    }
+
+    async loginWithAadhaar(credentials: AadhaarAuthRequest): Promise<AuthResponse> {
+        const response = await fetch(`${API_BASE_URL}/auth/aadhaar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(credentials),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Aadhaar authentication failed')
+        }
+
+        return response.json()
+    }
+
+    async verifyUser(verificationData: VerificationRequest): Promise<{ success: boolean; message: string }> {
+        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(verificationData),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Verification failed')
+        }
+
+        return response.json()
+    }
+
+    async refreshToken(): Promise<{ access_token: string; token_type: string; expires_in: number }> {
+        const refreshToken = localStorage.getItem('refreshToken')
+        if (!refreshToken) {
+            throw new Error('No refresh token available')
+        }
+
+        const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Token refresh failed')
+        }
+
+        return response.json()
+    }
+
+    async logout(): Promise<void> {
+        const token = localStorage.getItem('accessToken')
+        if (token) {
+            try {
+                await fetch(`${API_BASE_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: this.getAuthHeaders(),
+                })
+            } catch (error) {
+                console.error('Logout API call failed:', error)
+                // Continue with local logout even if API call fails
+            }
+        }
+
+        // Clear local storage
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+    }
+
+    async getCurrentUser(): Promise<User> {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: this.getAuthHeaders(),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Failed to get user info')
+        }
+
+        const userData = await response.json()
+
+        // Transform backend response to frontend User type
+        return {
+            id: userData.user_id,
+            email: userData.email,
+            role: userData.role,
+            preferredLanguages: userData.preferred_languages || ['en'],
+            location: userData.location || {
+                type: 'Point',
+                coordinates: [0, 0]
+            },
+            verificationStatus: {
+                isEmailVerified: userData.verification_status?.includes('email') || false,
+                isPhoneVerified: userData.verification_status?.includes('phone') || false,
+                isBusinessVerified: userData.verification_status?.includes('business') || false,
+                isIdentityVerified: userData.verification_status?.includes('identity') || false,
+            },
+            createdAt: userData.created_at,
+            updatedAt: userData.last_login || userData.created_at,
+        }
+    }
+
+    async requestPasswordReset(email: string): Promise<{ message: string }> {
+        const response = await fetch(`${API_BASE_URL}/auth/password-reset/request`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Password reset request failed')
+        }
+
+        return response.json()
+    }
+
+    async confirmPasswordReset(data: PasswordResetConfirmRequest): Promise<{ message: string }> {
+        const response = await fetch(`${API_BASE_URL}/auth/password-reset/confirm`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Password reset failed')
+        }
+
+        return response.json()
+    }
+
+    // Helper method to check if user is authenticated
+    isAuthenticated(): boolean {
+        const token = localStorage.getItem('accessToken')
+        if (!token) return false
+
+        try {
+            // Basic JWT token validation (check if not expired)
+            const payload = JSON.parse(atob(token.split('.')[1]))
+            const currentTime = Date.now() / 1000
+            return payload.exp > currentTime
+        } catch {
+            return false
+        }
+    }
+
+    // Helper method to get stored tokens
+    getTokens(): { accessToken: string | null; refreshToken: string | null } {
+        return {
+            accessToken: localStorage.getItem('accessToken'),
+            refreshToken: localStorage.getItem('refreshToken')
+        }
+    }
+
+    // Helper method to store tokens
+    storeTokens(accessToken: string, refreshToken: string): void {
+        localStorage.setItem('accessToken', accessToken)
+        localStorage.setItem('refreshToken', refreshToken)
+    }
+}
+
+export const authService = new AuthService()

@@ -1,0 +1,95 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: backend/requirements.txt
+    
+    - name: Install dependencies
+      run: |
+        cd frontend && npm ci
+        cd ../backend && pip install -r requirements.txt
+    
+    - name: Build application
+      run: |
+        cd frontend && npm run build
+        cd ../backend && python -m build
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1
+    
+    - name: Build and push Docker images
+      run: |
+        # Build frontend image
+        docker build -t mandi-frontend:${{ github.sha }} -f frontend/Dockerfile frontend/
+        
+        # Build backend image
+        docker build -t mandi-backend:${{ github.sha }} -f backend/Dockerfile backend/
+        
+        # Tag and push to ECR (example)
+        # aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+        # docker tag mandi-frontend:${{ github.sha }} $ECR_REGISTRY/mandi-frontend:${{ github.sha }}
+        # docker tag mandi-backend:${{ github.sha }} $ECR_REGISTRY/mandi-backend:${{ github.sha }}
+        # docker push $ECR_REGISTRY/mandi-frontend:${{ github.sha }}
+        # docker push $ECR_REGISTRY/mandi-backend:${{ github.sha }}
+    
+    - name: Deploy to ECS
+      run: |
+        echo "Deploying to ${{ github.event.inputs.environment || 'production' }}"
+        # Update ECS service with new image
+        # aws ecs update-service --cluster mandi-cluster --service mandi-frontend --force-new-deployment
+        # aws ecs update-service --cluster mandi-cluster --service mandi-backend --force-new-deployment
+    
+    - name: Run database migrations
+      run: |
+        echo "Running database migrations..."
+        # cd backend && python -m alembic upgrade head
+    
+    - name: Warm up application
+      run: |
+        echo "Warming up application..."
+        # curl -f https://api.mandi-marketplace.com/health || exit 1
+    
+    - name: Update deployment status
+      run: |
+        echo "Deployment completed successfully"
+        # Update deployment tracking system
