@@ -23,6 +23,26 @@ export type ProductCategory =
 
 export type ProductStatus = 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'DRAFT'
 
+// Measurement units for products (lowercase to match backend enums)
+export type MeasurementUnit =
+    | 'kg'
+    | 'gram'
+    | 'quintal'
+    | 'ton'
+    | 'liter'
+    | 'piece'
+    | 'dozen'
+    | 'bag'
+    | 'box'
+
+// Quality grades for products (lowercase to match backend enums)
+export type QualityGrade =
+    | 'premium'
+    | 'grade_a'
+    | 'grade_b'
+    | 'standard'
+    | 'organic'
+
 export type PaymentStatus =
     | 'PENDING'
     | 'PROCESSING'

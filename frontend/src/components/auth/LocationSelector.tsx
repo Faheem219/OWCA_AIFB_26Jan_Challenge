@@ -6,6 +6,7 @@ import {
     Typography,
     Alert,
     CircularProgress,
+    Grid,
 } from '@mui/material'
 import { LocationOn, MyLocation } from '@mui/icons-material'
 import { useTranslation } from 'react-i18next'
@@ -28,14 +29,38 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 }) => {
     const { t } = useTranslation()
     const [address, setAddress] = useState(location?.address || '')
+    const [city, setCity] = useState(location?.city || '')
+    const [state, setState] = useState(location?.state || '')
+    const [pincode, setPincode] = useState(location?.pincode || '')
     const [isGettingLocation, setIsGettingLocation] = useState(false)
     const [locationError, setLocationError] = useState<string | null>(null)
 
     useEffect(() => {
-        if (location?.address) {
-            setAddress(location.address)
+        if (location) {
+            if (location.address) setAddress(location.address)
+            if (location.city) setCity(location.city)
+            if (location.state) setState(location.state)
+            if (location.pincode) setPincode(location.pincode)
         }
     }, [location])
+
+    const updateLocation = (updates: Partial<{ address: string; city: string; state: string; pincode: string; coordinates: [number, number] }>) => {
+        const newAddress = updates.address !== undefined ? updates.address : address
+        const newCity = updates.city !== undefined ? updates.city : city
+        const newState = updates.state !== undefined ? updates.state : state
+        const newPincode = updates.pincode !== undefined ? updates.pincode : pincode
+        const newCoordinates = updates.coordinates || location?.coordinates || [0, 0]
+
+        const locationData: LocationData = {
+            type: 'Point',
+            coordinates: newCoordinates as [number, number],
+            address: newAddress || `${newCity}, ${newState}`,
+            city: newCity,
+            state: newState,
+            pincode: newPincode,
+        }
+        onChange(locationData)
+    }
 
     const getCurrentLocation = () => {
         setIsGettingLocation(true)
@@ -52,27 +77,16 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 const { latitude, longitude } = position.coords
 
                 try {
-                    // Try to get address from coordinates using reverse geocoding
-                    // For now, we'll use a simple format
-                    const locationData: LocationData = {
-                        type: 'Point',
+                    updateLocation({
                         coordinates: [longitude, latitude],
-                        address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-                    }
-
-                    // In a real implementation, you would use a geocoding service
-                    // to convert coordinates to a human-readable address
-                    setAddress(locationData.address || '')
-                    onChange(locationData)
+                        address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+                    })
                 } catch (error) {
                     console.error('Error getting address:', error)
-                    const locationData: LocationData = {
-                        type: 'Point',
+                    updateLocation({
                         coordinates: [longitude, latitude],
-                        address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-                    }
-                    setAddress(locationData.address || '')
-                    onChange(locationData)
+                        address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+                    })
                 }
 
                 setIsGettingLocation(false)
@@ -90,40 +104,72 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         )
     }
 
-    const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newAddress = event.target.value
-        setAddress(newAddress)
-
-        if (newAddress.trim()) {
-            // For now, create a basic location object
-            // In a real implementation, you would geocode the address
-            const locationData: LocationData = {
-                type: 'Point',
-                coordinates: [0, 0], // Default coordinates
-                address: newAddress,
-            }
-            onChange(locationData)
-        }
-    }
-
     return (
         <Box>
-            <TextField
-                fullWidth
-                label={t('auth.location')}
-                value={address}
-                onChange={handleAddressChange}
-                required={required}
-                error={error}
-                helperText={helperText}
-                placeholder="Enter your city, state or full address"
-                InputProps={{
-                    startAdornment: <LocationOn sx={{ mr: 1, color: 'text.secondary' }} />,
-                }}
-                sx={{ mb: 2 }}
-            />
+            <Grid container spacing={2}>
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        label={t('auth.city') || 'City'}
+                        value={city}
+                        onChange={(e) => {
+                            setCity(e.target.value)
+                            updateLocation({ city: e.target.value })
+                        }}
+                        required={required}
+                        error={error && !city}
+                        placeholder="Enter your city"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label={t('auth.state') || 'State'}
+                        value={state}
+                        onChange={(e) => {
+                            setState(e.target.value)
+                            updateLocation({ state: e.target.value })
+                        }}
+                        required={required}
+                        error={error && !state}
+                        placeholder="Enter your state"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label={t('auth.pincode') || 'Pincode'}
+                        value={pincode}
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                            setPincode(value)
+                            updateLocation({ pincode: value })
+                        }}
+                        required={required}
+                        error={error && (!pincode || pincode.length !== 6)}
+                        helperText={pincode && pincode.length !== 6 ? 'Pincode must be 6 digits' : helperText}
+                        placeholder="6-digit pincode"
+                        inputProps={{ maxLength: 6 }}
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        label={t('auth.address') || 'Full Address (Optional)'}
+                        value={address}
+                        onChange={(e) => {
+                            setAddress(e.target.value)
+                            updateLocation({ address: e.target.value })
+                        }}
+                        placeholder="Street address, area, landmark"
+                        InputProps={{
+                            startAdornment: <LocationOn sx={{ mr: 1, color: 'text.secondary' }} />,
+                        }}
+                    />
+                </Grid>
+            </Grid>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2, mb: 2 }}>
                 <Button
                     variant="outlined"
                     size="small"
@@ -137,12 +183,8 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                     onClick={getCurrentLocation}
                     disabled={isGettingLocation}
                 >
-                    {isGettingLocation ? 'Getting Location...' : 'Use Current Location'}
+                    {isGettingLocation ? 'Getting Location...' : 'Use GPS Coordinates'}
                 </Button>
-
-                <Typography variant="body2" color="text.secondary">
-                    or enter manually above
-                </Typography>
             </Box>
 
             {locationError && (
@@ -151,10 +193,10 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 </Alert>
             )}
 
-            {location && location.coordinates[0] !== 0 && location.coordinates[1] !== 0 && (
+            {location && location.coordinates && location.coordinates[0] !== 0 && location.coordinates[1] !== 0 && (
                 <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                     <Typography variant="body2" color="text.secondary">
-                        <strong>Coordinates:</strong> {location.coordinates[1].toFixed(6)}, {location.coordinates[0].toFixed(6)}
+                        <strong>GPS Coordinates:</strong> {location.coordinates[1].toFixed(6)}, {location.coordinates[0].toFixed(6)}
                     </Typography>
                 </Box>
             )}

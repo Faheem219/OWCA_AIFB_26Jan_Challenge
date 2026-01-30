@@ -44,7 +44,7 @@ export const ProductDetailPage: React.FC = () => {
         fetchProduct()
     }, [id, currentLanguage])
 
-    const handleFavoriteToggle = async (productId: string, isFavorited: boolean) => {
+    const handleFavoriteToggle = async (_productId: string, isFavorited: boolean) => {
         try {
             // TODO: Implement favorite/unfavorite API call
             setIsFavorited(isFavorited)
@@ -66,7 +66,7 @@ export const ProductDetailPage: React.FC = () => {
         }
     }
 
-    const handleMakeOffer = (product: Product, offer: { amount: number; quantity: number; message: string }) => {
+    const handleMakeOffer = (_product: Product, offer: { amount: number; quantity: number; message: string }) => {
         // TODO: Implement make offer functionality
         console.log('Making offer:', offer)
     }

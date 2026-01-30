@@ -17,7 +17,7 @@ db.createCollection('users', {
                 },
                 role: {
                     bsonType: 'string',
-                    enum: ['VENDOR', 'BUYER']
+                    enum: ['vendor', 'buyer', 'admin']
                 },
                 preferred_languages: {
                     bsonType: 'array',
@@ -60,7 +60,7 @@ db.createCollection('products', {
                 },
                 category: {
                     bsonType: 'string',
-                    enum: ['VEGETABLES', 'FRUITS', 'GRAINS', 'SPICES', 'DAIRY']
+                    enum: ['vegetables', 'fruits', 'grains', 'spices', 'dairy']
                 },
                 base_price: {
                     bsonType: 'decimal'

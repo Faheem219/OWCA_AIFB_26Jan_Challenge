@@ -453,14 +453,37 @@ async def get_current_user_info(
                 detail="User not found"
             )
         
+        # Return comprehensive user info for frontend
         return {
             "user_id": user.user_id,
             "email": user.email,
-            "role": user.role.value,
+            "phone": user.phone,
+            "role": user.role.value.upper(),  # Frontend expects uppercase
+            "preferred_languages": [lang.value for lang in user.preferred_languages],
+            "location": {
+                "type": "Point",
+                "coordinates": user.location.coordinates if user.location.coordinates else [0, 0],
+                "address": user.location.address,
+                "city": user.location.city,
+                "state": user.location.state,
+                "pincode": user.location.pincode
+            },
             "verification_status": user.verification_status.value,
             "is_active": user.is_active,
-            "created_at": user.created_at.isoformat(),
-            "last_login": user.last_login.isoformat() if user.last_login else None
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.updated_at.isoformat() if user.updated_at else None,
+            "last_login": user.last_login.isoformat() if user.last_login else None,
+            # Vendor-specific fields
+            "business_name": getattr(user, 'business_name', None),
+            "business_type": getattr(user, 'business_type', None),
+            "product_categories": getattr(user, 'product_categories', None),
+            "market_location": getattr(user, 'market_location', None),
+            "rating": getattr(user, 'rating', None),
+            "total_transactions": getattr(user, 'total_transactions', None),
+            # Buyer-specific fields
+            "preferred_categories": getattr(user, 'preferred_categories', None),
+            "budget_range": getattr(user, 'budget_range', None),
+            "total_purchases": getattr(user, 'total_purchases', None)
         }
         
     except HTTPException:

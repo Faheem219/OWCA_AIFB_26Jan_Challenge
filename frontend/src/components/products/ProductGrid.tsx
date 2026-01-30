@@ -11,19 +11,16 @@ import {
     Box,
     IconButton,
     Rating,
-    Skeleton,
-    Tooltip
+    Skeleton
 } from '@mui/material'
 import {
     LocationOn as LocationIcon,
     Favorite as FavoriteIcon,
     FavoriteBorder as FavoriteBorderIcon,
     Share as ShareIcon,
-    Visibility as ViewIcon,
     LocalOffer as OfferIcon,
     Verified as VerifiedIcon
 } from '@mui/icons-material'
-import { useTranslation } from '../../hooks/useTranslation'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { Product, MultilingualText } from '../../types'
 
@@ -58,7 +55,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     isFavorited = false,
     showVendorInfo = true
 }) => {
-    const t = useTranslation()
     const { currentLanguage } = useLanguage()
 
     const getTranslatedText = (multilingualText: MultilingualText): string => {
@@ -73,7 +69,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         }).format(price)
     }
 
-    const formatDistance = (coordinates: [number, number]): string => {
+    const formatDistance = (_coordinates: [number, number]): string => {
         // TODO: Calculate actual distance based on user location
         return '2.5 km'
     }

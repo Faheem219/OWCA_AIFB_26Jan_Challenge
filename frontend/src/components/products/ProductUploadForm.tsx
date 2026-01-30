@@ -22,10 +22,6 @@ import {
     ImageListItem,
     ImageListItemBar,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     LinearProgress
 } from '@mui/material'
 import {
@@ -39,9 +35,8 @@ import {
 import { useDropzone } from 'react-dropzone'
 import { useTranslation } from '../../hooks/useTranslation'
 import { useLanguage } from '../../contexts/LanguageContext'
-import { useAuth } from '../../hooks/useAuth'
 import { productService, ProductCreateRequest } from '../../services/productService'
-import { ProductCategory, SupportedLanguage } from '../../types'
+import { ProductCategory, MeasurementUnit, QualityGrade } from '../../types'
 
 interface ProductUploadFormProps {
     onSuccess?: (productId: string) => void
@@ -95,9 +90,8 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
     onSuccess,
     onCancel
 }) => {
-    const t = useTranslation()
+    const { t } = useTranslation()
     const { currentLanguage } = useLanguage()
-    const { user } = useAuth()
 
     // Form state
     const [formData, setFormData] = useState({
@@ -106,11 +100,11 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
         category: '' as ProductCategory | '',
         subcategory: '',
         basePrice: '',
-        unit: 'kg',
+        unit: 'kg' as MeasurementUnit,
         quantityAvailable: '',
         minimumOrder: '1',
         maximumOrder: '',
-        qualityGrade: 'standard',
+        qualityGrade: 'standard' as QualityGrade,
         harvestDate: '',
         expiryDate: '',
         origin: '',
@@ -127,7 +121,6 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
     const [uploadProgress, setUploadProgress] = useState(0)
-    const [showImageDialog, setShowImageDialog] = useState(false)
 
     // Image upload handling
     const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -283,7 +276,7 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
             setUploadProgress(40)
 
             // Upload images
-            const imageUrls = await uploadImages(product.id)
+            await uploadImages(product.id)
             setUploadProgress(80)
 
             // Update product with image URLs

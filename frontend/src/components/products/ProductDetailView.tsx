@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
     Box,
     Grid,
@@ -7,7 +7,6 @@ import {
     Chip,
     Card,
     CardContent,
-    Divider,
     IconButton,
     Dialog,
     DialogContent,
@@ -18,12 +17,10 @@ import {
     List,
     ListItem,
     ListItemText,
-    ListItemAvatar,
     Skeleton,
     Alert,
     Tabs,
-    Tab,
-    Badge
+    Tab
 } from '@mui/material'
 import {
     LocationOn as LocationIcon,
@@ -35,14 +32,12 @@ import {
     Verified as VerifiedIcon,
     CalendarToday as CalendarIcon,
     Scale as ScaleIcon,
-    LocalShipping as ShippingIcon,
     Security as SecurityIcon,
     Close as CloseIcon,
     ZoomIn as ZoomIcon,
     NavigateBefore as PrevIcon,
     NavigateNext as NextIcon
 } from '@mui/icons-material'
-import { useTranslation } from '../../hooks/useTranslation'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useAuth } from '../../hooks/useAuth'
 import { Product, MultilingualText } from '../../types'
@@ -329,7 +324,6 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     onStartChat,
     isFavorited = false
 }) => {
-    const t = useTranslation()
     const { currentLanguage } = useLanguage()
     const { user } = useAuth()
     const [offerDialogOpen, setOfferDialogOpen] = useState(false)

@@ -2,8 +2,8 @@ import {
     Product,
     ProductCategory,
     SupportedLanguage,
-    ApiResponse,
-    PaginatedResponse
+    MeasurementUnit,
+    QualityGrade
 } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
@@ -13,16 +13,16 @@ export interface ProductCreateRequest {
     name_language: SupportedLanguage
     description_text: string
     description_language: SupportedLanguage
-    category: ProductCategory
+    category: string // lowercase category to match backend
     subcategory?: string
     tags: string[]
     base_price: number
     negotiable: boolean
     quantity_available: number
-    unit: string
+    unit: MeasurementUnit
     minimum_order: number
     maximum_order?: number
-    quality_grade: string
+    quality_grade: QualityGrade
     harvest_date?: string
     expiry_date?: string
     certifications: string[]
@@ -118,11 +118,27 @@ class ProductService {
         }
     }
 
+    // Helper to convert category to lowercase for backend
+    private categoryToBackend(category: ProductCategory | string): string {
+        return category.toLowerCase()
+    }
+
+    // Helper to convert category from backend to uppercase for frontend
+    private categoryFromBackend(category: string): ProductCategory {
+        return category.toUpperCase() as ProductCategory
+    }
+
     async createProduct(productData: ProductCreateRequest): Promise<Product> {
+        // Convert category to lowercase for backend
+        const backendData = {
+            ...productData,
+            category: this.categoryToBackend(productData.category)
+        }
+        
         const response = await fetch(`${API_BASE_URL}/products/`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
-            body: JSON.stringify(productData),
+            body: JSON.stringify(backendData),
         })
 
         if (!response.ok) {
@@ -320,7 +336,7 @@ class ProductService {
                 translations: backendProduct.description.translations || {},
                 autoTranslated: backendProduct.description.auto_translated || false
             },
-            category: backendProduct.category as ProductCategory,
+            category: this.categoryFromBackend(backendProduct.category),
             subcategory: backendProduct.subcategory || '',
             images: backendProduct.images?.map((img: any) => ({
                 id: img.image_id,
@@ -345,7 +361,7 @@ class ProductService {
             tags: backendProduct.tags || [],
             createdAt: backendProduct.created_at,
             updatedAt: backendProduct.updated_at,
-            status: backendProduct.status as any
+            status: (backendProduct.status || 'ACTIVE').toUpperCase() as any
         }
     }
 }

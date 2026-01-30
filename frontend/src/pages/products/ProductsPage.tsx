@@ -96,6 +96,7 @@ export const ProductsPage: React.FC = () => {
     // Update URL parameters
     const updateSearchParams = (newParams: Partial<ProductSearchQuery>) => {
         const params = new URLSearchParams(searchParams)
+        const paramKeys = Object.keys(newParams)
 
         Object.entries(newParams).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
@@ -109,8 +110,9 @@ export const ProductsPage: React.FC = () => {
             }
         })
 
-        // Reset page when search parameters change
-        if (key !== 'skip' && key !== 'limit') {
+        // Reset page when search parameters change (not for pagination params)
+        const isPaginationChange = paramKeys.every(k => k === 'skip' || k === 'limit')
+        if (!isPaginationChange) {
             params.delete('page')
             setCurrentPage(1)
         }
@@ -206,7 +208,7 @@ export const ProductsPage: React.FC = () => {
         navigate(`/products/${product.id}`)
     }
 
-    const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
         setCurrentPage(page)
         const params = new URLSearchParams(searchParams)
         params.set('page', page.toString())

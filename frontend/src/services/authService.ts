@@ -1,8 +1,7 @@
 import {
     User,
     SupportedLanguage,
-    UserRole,
-    LocationData
+    UserRole
 } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
@@ -22,13 +21,22 @@ interface BackendLoginRequest {
 }
 
 export interface RegisterRequest {
+    method: 'email' | 'phone'
     email: string
     password: string
     role: UserRole
-    preferred_languages: SupportedLanguage[]
+    preferred_language: SupportedLanguage
     phone?: string
+    full_name: string
+    location_city: string
+    location_state: string
+    location_pincode: string
     business_name?: string
-    location: LocationData
+    business_type?: string
+    product_categories?: string[]
+    market_location?: string
+    accept_terms: boolean
+    accept_privacy: boolean
 }
 
 export interface AuthResponse {
@@ -103,20 +111,59 @@ class AuthService {
             throw new Error(error.detail || 'Login failed')
         }
 
-        return response.json()
+        const data = await response.json()
+        
+        // Transform backend user to frontend User type
+        const backendUser = data.user
+        const verificationStatus = backendUser.verification_status || 'unverified'
+        const user: User = {
+            id: backendUser.user_id || backendUser.id,
+            email: backendUser.email,
+            phone: backendUser.phone,
+            role: backendUser.role as UserRole,
+            preferredLanguages: backendUser.preferred_languages || ['en'],
+            location: backendUser.location || { type: 'Point', coordinates: [0, 0] },
+            verificationStatus: {
+                isEmailVerified: verificationStatus === 'verified',
+                isPhoneVerified: verificationStatus === 'verified',
+                isBusinessVerified: verificationStatus === 'verified',
+                isIdentityVerified: verificationStatus === 'verified',
+            },
+            createdAt: backendUser.created_at,
+            updatedAt: backendUser.updated_at || backendUser.created_at,
+        }
+        
+        return {
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+            token_type: data.token_type,
+            expires_in: data.expires_in,
+            user
+        }
     }
 
     async register(userData: RegisterRequest): Promise<{ user_id: string; message: string; requires_verification: boolean; verification_method?: string }> {
+        // Transform role to lowercase for backend
+        const backendRequest = {
+            ...userData,
+            role: userData.role.toLowerCase() as 'vendor' | 'buyer'
+        }
+
         const response = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(userData),
+            body: JSON.stringify(backendRequest),
         })
 
         if (!response.ok) {
             const error = await response.json()
+            // Handle FastAPI validation errors (422)
+            if (error.detail && Array.isArray(error.detail)) {
+                const messages = error.detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ')
+                throw new Error(messages)
+            }
             throw new Error(error.detail || 'Registration failed')
         }
 
@@ -232,20 +279,23 @@ class AuthService {
         const userData = await response.json()
 
         // Transform backend response to frontend User type
+        // Backend verification_status is a single string like 'verified', 'unverified', etc.
+        const verificationStatus = userData.verification_status || 'unverified'
         return {
             id: userData.user_id,
             email: userData.email,
-            role: userData.role,
+            phone: userData.phone,
+            role: userData.role as UserRole,
             preferredLanguages: userData.preferred_languages || ['en'],
             location: userData.location || {
                 type: 'Point',
                 coordinates: [0, 0]
             },
             verificationStatus: {
-                isEmailVerified: userData.verification_status?.includes('email') || false,
-                isPhoneVerified: userData.verification_status?.includes('phone') || false,
-                isBusinessVerified: userData.verification_status?.includes('business') || false,
-                isIdentityVerified: userData.verification_status?.includes('identity') || false,
+                isEmailVerified: verificationStatus === 'verified',
+                isPhoneVerified: verificationStatus === 'verified',
+                isBusinessVerified: verificationStatus === 'verified',
+                isIdentityVerified: verificationStatus === 'verified',
             },
             createdAt: userData.created_at,
             updatedAt: userData.last_login || userData.created_at,

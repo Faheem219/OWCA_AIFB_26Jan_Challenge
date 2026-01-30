@@ -20,7 +20,7 @@ export const LoginPage: React.FC = () => {
     // Get the intended destination from location state
     const from = (location.state as any)?.from?.pathname || '/dashboard'
 
-    const handleLogin = async (email: string, password: string) => {
+    const handleLogin = async (email: string, password: string, _rememberMe: boolean = false) => {
         await login(email, password)
         navigate(from, { replace: true })
     }

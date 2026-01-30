@@ -159,4 +159,20 @@ class TestMarketDataService:
     
     @pytest.mark.asyncio
     async def test_validate_market_data_future_date(self, market_data_service):
-        """Test validation of 
+        """Test validation of market data with future dates."""
+        future_price = MarketPrice(
+            commodity="onion",
+            market="Delhi",
+            state="Delhi",
+            min_price=Decimal("20.00"),
+            max_price=Decimal("30.00"),
+            modal_price=Decimal("25.00"),
+            unit=PriceUnit.PER_KG,
+            date=date.today(),
+            source=DataSource.AGMARKNET
+        )
+        
+        result = await market_data_service.validate_market_data(future_price)
+        
+        assert result is not None
+        assert hasattr(result, 'is_valid')

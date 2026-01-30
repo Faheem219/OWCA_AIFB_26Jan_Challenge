@@ -259,6 +259,33 @@ class AuthService:
                 }
             )
             
+            # Build comprehensive user_info for frontend
+            user_info = {
+                "user_id": user["user_id"],
+                "id": user["user_id"],  # Frontend expects 'id'
+                "email": user["email"],
+                "phone": user.get("phone"),
+                "role": user["role"].upper() if user["role"] else "BUYER",  # Frontend expects uppercase
+                "preferred_languages": user.get("preferred_languages", ["en"]),
+                "location": user.get("location", {"type": "Point", "coordinates": [0, 0]}),
+                "full_name": user.get("full_name"),
+                "verification_status": user.get("verification_status", "unverified"),
+                "is_active": user.get("is_active", True),
+                "created_at": user.get("created_at").isoformat() if user.get("created_at") else None,
+                "updated_at": user.get("updated_at").isoformat() if user.get("updated_at") else None,
+                # Vendor-specific
+                "business_name": user.get("business_name"),
+                "business_type": user.get("business_type"),
+                "product_categories": user.get("product_categories"),
+                "market_location": user.get("market_location"),
+                "rating": user.get("rating"),
+                "total_transactions": user.get("total_transactions"),
+                # Buyer-specific
+                "preferred_categories": user.get("preferred_categories"),
+                "budget_range": user.get("budget_range"),
+                "total_purchases": user.get("total_purchases")
+            }
+            
             return AuthResult(
                 success=True,
                 user_id=user["user_id"],
@@ -266,13 +293,7 @@ class AuthService:
                 refresh_token=tokens["refresh_token"],
                 token_type=tokens["token_type"],
                 expires_in=tokens["expires_in"],
-                user_info={
-                    "user_id": user["user_id"],
-                    "email": user["email"],
-                    "role": user["role"],
-                    "full_name": user.get("full_name"),
-                    "verification_status": user.get("verification_status")
-                },
+                user_info=user_info,
                 message="Login successful"
             )
             

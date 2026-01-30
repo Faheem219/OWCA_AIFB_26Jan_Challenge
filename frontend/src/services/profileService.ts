@@ -139,26 +139,40 @@ class ProfileService {
     }
 
     private transformProfileResponse(data: any): User | VendorProfile | BuyerProfile {
+        // Normalize role to uppercase for frontend compatibility
+        const normalizedRole = (data.role || '').toUpperCase() as 'VENDOR' | 'BUYER'
+        
+        // Transform location data to frontend format
+        const transformedLocation = data.location ? {
+            type: 'Point' as const,
+            coordinates: data.location.coordinates || [0, 0],
+            address: data.location.address,
+            city: data.location.city,
+            state: data.location.state,
+            pincode: data.location.pincode
+        } : {
+            type: 'Point' as const,
+            coordinates: [0, 0] as [number, number]
+        }
+        
         const baseUser: User = {
             id: data.user_id || data.id,
             email: data.email,
-            role: data.role,
+            phone: data.phone,
+            role: normalizedRole,
             preferredLanguages: data.preferred_languages || ['en'],
-            location: data.location || {
-                type: 'Point',
-                coordinates: [0, 0]
-            },
+            location: transformedLocation,
             verificationStatus: {
-                isEmailVerified: data.verification_status?.includes('email') || false,
-                isPhoneVerified: data.verification_status?.includes('phone') || false,
-                isBusinessVerified: data.verification_status?.includes('business') || false,
-                isIdentityVerified: data.verification_status?.includes('identity') || false,
+                isEmailVerified: data.verification_status === 'verified' || data.verification_status?.includes?.('email') || false,
+                isPhoneVerified: data.verification_status?.includes?.('phone') || false,
+                isBusinessVerified: data.verification_status?.includes?.('business') || false,
+                isIdentityVerified: data.verification_status?.includes?.('identity') || false,
             },
             createdAt: data.created_at,
             updatedAt: data.updated_at,
         }
 
-        if (data.role === 'VENDOR') {
+        if (normalizedRole === 'VENDOR') {
             return {
                 ...baseUser,
                 businessName: data.business_name || '',

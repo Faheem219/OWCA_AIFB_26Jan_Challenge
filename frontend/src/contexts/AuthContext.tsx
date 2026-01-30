@@ -145,14 +145,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('Passwords do not match')
             }
 
+            // Validate location data
+            if (!userData.location) {
+                throw new Error('Location information is required')
+            }
+
+            // Extract location fields with defaults
+            const city = userData.location.city || 'Unknown'
+            const state = userData.location.state || 'Unknown'
+            const pincode = userData.location.pincode || '000000'
+
             const registerRequest: RegisterRequest = {
+                method: 'email',
                 email: userData.email,
                 password: userData.password,
                 role: userData.role,
-                preferred_languages: userData.preferredLanguages,
-                phone: userData.phone,
-                business_name: userData.businessName,
-                location: userData.location
+                preferred_language: userData.preferredLanguages[0] || 'en',
+                phone: userData.phone || undefined,
+                full_name: userData.businessName || userData.email.split('@')[0], // Use business name or email prefix as name
+                location_city: city,
+                location_state: state,
+                location_pincode: pincode,
+                business_name: userData.role === 'VENDOR' ? userData.businessName : undefined,
+                business_type: userData.role === 'VENDOR' ? 'individual' : undefined,
+                product_categories: userData.role === 'VENDOR' ? ['vegetables'] : undefined,
+                market_location: userData.role === 'VENDOR' ? `${city}, ${state}` : undefined,
+                accept_terms: true,
+                accept_privacy: true
             }
 
             const response = await authService.register(registerRequest)
