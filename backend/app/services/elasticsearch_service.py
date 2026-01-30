@@ -109,45 +109,6 @@ class ElasticsearchService:
             
         except Exception as e:
             logger.error(f"Error creating text indexes: {e}")
-                            "search_keywords": {"type": "keyword"},
-                            "certifications": {"type": "keyword"},
-                            "origin": {"type": "text"},
-                            "variety": {"type": "text"},
-                            
-                            # Dates and timestamps
-                            "harvest_date": {"type": "date"},
-                            "expiry_date": {"type": "date"},
-                            "created_at": {"type": "date"},
-                            "updated_at": {"type": "date"},
-                            
-                            # Stats
-                            "views_count": {"type": "integer"},
-                            "favorites_count": {"type": "integer"},
-                            
-                            # Vendor information
-                            "vendor_name": {"type": "text"},
-                            "vendor_rating": {"type": "float"},
-                            "vendor_location": {"type": "text"}
-                        }
-                    },
-                    "settings": {
-                        "number_of_shards": 1,
-                        "number_of_replicas": 0,
-                        "analysis": {
-                            "analyzer": {
-                                "multilingual_analyzer": {
-                                    "type": "standard",
-                                    "stopwords": "_none_"
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                await self.client.indices.create(index=self.index_name, body=mapping)
-                logger.info(f"Created Elasticsearch index: {self.index_name}")
-            
-            logger.error(f"Error creating text indexes: {e}")
     
     async def index_product(self, product: Product, vendor_info: Optional[Dict[str, Any]] = None) -> bool:
         """
@@ -337,168 +298,52 @@ class ElasticsearchService:
             sort_criteria.append(("created_at", -1))
         
         return sort_criteria
+    
+    async def get_search_suggestions(self, partial_query: str, language: Optional[str] = None) -> List[str]:
+        """Get search suggestions for autocomplete.
+        
+        Args:
+            partial_query: Partial search query
+            language: Optional language code
             
-            # Execute search
-            start_time = datetime.utcnow()
+        Returns:
+            List of suggested search terms
+        """
+        if not await self._ensure_initialized():
+            return []
+        
+        try:
+            # Simple prefix-based suggestions using MongoDB text search
+            pipeline = [
+                {
+                    "$match": {
+                        "$text": {"$search": partial_query},
+                        "status": ProductStatus.ACTIVE.value
+                    }
+                },
+                {"$project": {"name": 1, "score": {"$meta": "textScore"}}},
+                {"$sort": {"score": -1}},
+                {"$limit": 10}
+            ]
             
-            response = await self.client.search(
-                index=self.index_name,
-                body=es_query,
-                from_=query.skip,
-                size=query.limit
-            )
+            results = await self.products_collection.aggregate(pipeline).to_list(length=10)
             
-            end_time = datetime.utcnow()
-            search_time_ms = int((end_time - start_time).total_seconds() * 1000)
+            # Extract unique names
+            suggestions = []
+            seen = set()
+            for result in results:
+                name = result.get("name", "")
+                if isinstance(name, dict):
+                    name = name.get("original_text", "")
+                if name and name.lower() not in seen:
+                    suggestions.append(name)
+                    seen.add(name.lower())
             
-            # Extract results
-            hits = response["hits"]["hits"]
-            total_count = response["hits"]["total"]["value"]
-            
-            # Convert hits to product data
-            products = []
-            for hit in hits:
-                source = hit["_source"]
-                source["_score"] = hit["_score"]
-                products.append(source)
-            
-            # Build search metadata
-            search_metadata = {
-                "query": query.query,
-                "language": query.language.value,
-                "search_time_ms": search_time_ms,
-                "total_hits": total_count,
-                "max_score": response["hits"]["max_score"],
-                "suggestions": await self._get_search_suggestions(query, response)
-            }
-            
-            return products, total_count, search_metadata
+            return suggestions
             
         except Exception as e:
-            logger.error(f"Elasticsearch search failed: {e}")
-            return [], 0, {"error": str(e)}
-    
-    async def _build_elasticsearch_query(self, query: ProductSearchQuery) -> Dict[str, Any]:
-        """Build Elasticsearch query from search parameters."""
-        es_query = {
-            "query": {
-                "bool": {
-                    "must": [],
-                    "filter": [],
-                    "should": [],
-                    "must_not": []
-                }
-            },
-            "sort": [],
-            "highlight": {
-                "fields": {
-                    "name.original_text": {},
-                    "description.original_text": {},
-                    f"name.translations.{query.language.value}": {},
-                    f"description.translations.{query.language.value}": {}
-                }
-            }
-        }
-        
-        # Text search with multilingual support
-        if query.query:
-            text_query = {
-                "multi_match": {
-                    "query": query.query,
-                    "fields": [
-                        "name.original_text^3",
-                        "description.original_text^2",
-                        f"name.translations.{query.language.value}^3",
-                        f"description.translations.{query.language.value}^2",
-                        "tags^2",
-                        "search_keywords^2",
-                        "variety",
-                        "origin"
-                    ],
-                    "type": "best_fields",
-                    "fuzziness": "AUTO",
-                    "operator": "or"
-                }
-            }
-            es_query["query"]["bool"]["must"].append(text_query)
-        else:
-            # If no text query, match all
-            es_query["query"]["bool"]["must"].append({"match_all": {}})
-        
-        # Status filter (only active products)
-        es_query["query"]["bool"]["filter"].append({
-            "term": {"status": ProductStatus.ACTIVE.value}
-        })
-        
-        # Category filter
-        if query.category:
-            es_query["query"]["bool"]["filter"].append({
-                "term": {"category": query.category.value}
-            })
-        
-        # Subcategory filter
-        if query.subcategory:
-            es_query["query"]["bool"]["filter"].append({
-                "match": {"subcategory": query.subcategory}
-            })
-        
-        # Price range filter
-        if query.min_price is not None or query.max_price is not None:
-            price_range = {}
-            if query.min_price is not None:
-                price_range["gte"] = float(query.min_price)
-            if query.max_price is not None:
-                price_range["lte"] = float(query.max_price)
-            
-            es_query["query"]["bool"]["filter"].append({
-                "range": {"price": price_range}
-            })
-        
-        # Location filters
-        if query.city:
-            es_query["query"]["bool"]["filter"].append({
-                "term": {"location.city": query.city.lower()}
-            })
-        
-        if query.state:
-            es_query["query"]["bool"]["filter"].append({
-                "term": {"location.state": query.state.lower()}
-            })
-        
-        # Geospatial search
-        if query.coordinates and query.radius_km:
-            es_query["query"]["bool"]["filter"].append({
-                "geo_distance": {
-                    "distance": f"{query.radius_km}km",
-                    "location.coordinates": {
-                        "lat": query.coordinates[1],
-                        "lon": query.coordinates[0]
-                    }
-                }
-            })
-        
-        # Quality grades filter
-        if query.quality_grades:
-            es_query["query"]["bool"]["filter"].append({
-                "terms": {"quality_grade": [grade.value for grade in query.quality_grades]}
-            })
-        
-        # Availability filter
-        if query.available_only:
-            es_query["query"]["bool"]["filter"].append({
-                "range": {"quantity_available": {"gt": 0}}
-            })
-        
-        # Organic filter
-        if query.organic_only:
-            es_query["query"]["bool"]["should"].extend([
-                {"term": {"quality_grade": QualityGrade.ORGANIC.value}},
-                {"terms": {"certifications": ["organic", "bio", "natural"]}}
-            ])
-            es_query["query"]["bool"]["minimum_should_match"] = 1
-        
-        
-        return sort_criteria
+            logger.error(f"Error getting search suggestions: {e}")
+            return []
     
     async def bulk_index_products(self, products: List[Tuple[Product, Optional[Dict[str, Any]]]]) -> Dict[str, int]:
         """
@@ -550,45 +395,4 @@ class ElasticsearchService:
 
 
 # Global elasticsearch service instance (now MongoDB-based)
-elasticsearch_service = ElasticsearchService()
-            
-            # Get aggregations for analytics
-            aggs_query = {
-                "size": 0,
-                "aggs": {
-                    "categories": {
-                        "terms": {"field": "category", "size": 10}
-                    },
-                    "cities": {
-                        "terms": {"field": "location.city", "size": 10}
-                    },
-                    "quality_grades": {
-                        "terms": {"field": "quality_grade", "size": 10}
-                    },
-                    "price_stats": {
-                        "stats": {"field": "price"}
-                    }
-                }
-            }
-            
-            aggs_response = await self.client.search(
-                index=self.index_name,
-                body=aggs_query
-            )
-            
-            return {
-                "total_products": stats["indices"][self.index_name]["total"]["docs"]["count"],
-                "index_size": stats["indices"][self.index_name]["total"]["store"]["size_in_bytes"],
-                "categories": aggs_response["aggregations"]["categories"]["buckets"],
-                "cities": aggs_response["aggregations"]["cities"]["buckets"],
-                "quality_grades": aggs_response["aggregations"]["quality_grades"]["buckets"],
-                "price_stats": aggs_response["aggregations"]["price_stats"]
-            }
-            
-        except Exception as e:
-            logger.error(f"Failed to get search analytics: {e}")
-            return {}
-
-
-# Global Elasticsearch service instance
 elasticsearch_service = ElasticsearchService()

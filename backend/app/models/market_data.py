@@ -58,7 +58,7 @@ class MarketPrice(BaseModel):
     arrivals_unit: Optional[str] = Field(None, description="Unit for arrivals")
     
     # Metadata
-    date: date = Field(..., description="Price date")
+    price_date: date = Field(..., description="Price date")
     source: DataSource = Field(..., description="Data source")
     data_quality: DataQuality = Field(default=DataQuality.UNVERIFIED, description="Data quality indicator")
     last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")

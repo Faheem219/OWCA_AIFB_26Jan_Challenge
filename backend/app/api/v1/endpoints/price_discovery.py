@@ -7,9 +7,9 @@ from typing import Dict, Any, Optional
 from datetime import date
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from ...core.database import get_database
-from ...services.market_data_service import MarketDataService
-from ...models.market_data import (
+from app.core.database import get_database
+from app.services.market_data_service import MarketDataService
+from app.models.market_data import (
     MarketPriceRequest, MarketPriceResponse,
     PriceHistoryRequest, PriceHistoryResponse,
     DataSyncStatus

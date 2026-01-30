@@ -9,7 +9,7 @@ import uuid
 
 from app.core.database import get_database
 from app.core.dependencies import get_current_user
-from app.models.user import UserProfile
+from app.models.user import UserResponse
 from app.services.translation_service import translation_service
 from app.services.ai_service import ai_service
 
@@ -81,12 +81,12 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
 
 @router.get("/conversations")
 async def get_conversations(
-    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
     db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Get user's chat conversations."""
     try:
-        user_id = str(current_user.id)
+        user_id = current_user.user_id
         
         conversations = await db.conversations.find({
             "$or": [
@@ -129,12 +129,12 @@ async def get_conversations(
 @router.post("/conversations")
 async def create_conversation(
     conversation_data: Dict[str, Any],
-    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
     db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Create a new chat conversation."""
     try:
-        user_id = str(current_user.id)
+        user_id = current_user.user_id
         other_participant_id = conversation_data.get("participant_id")
         product_id = conversation_data.get("product_id")
         
@@ -176,7 +176,7 @@ async def create_conversation(
 @router.get("/conversations/{conversation_id}/messages")
 async def get_messages(
     conversation_id: str,
-    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
     db: Annotated[Any, Depends(get_database)],
     limit: int = 50,
     skip: int = 0
@@ -187,7 +187,7 @@ async def get_messages(
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
         
-        user_id = str(current_user.id)
+        user_id = current_user.user_id
         if user_id not in [conversation.get("participant_1"), conversation.get("participant_2")]:
             raise HTTPException(status_code=403, detail="Not a participant")
         
@@ -221,7 +221,7 @@ async def get_messages(
 async def send_message(
     conversation_id: str,
     message_data: Dict[str, Any],
-    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
     db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Send a message in a conversation."""
@@ -230,7 +230,7 @@ async def send_message(
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
         
-        user_id = str(current_user.id)
+        user_id = current_user.user_id
         if user_id not in [conversation.get("participant_1"), conversation.get("participant_2")]:
             raise HTTPException(status_code=403, detail="Not a participant")
         
@@ -287,7 +287,7 @@ async def send_message(
 async def make_offer(
     conversation_id: str,
     offer_data: Dict[str, Any],
-    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
     db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Make a price offer in a conversation."""
@@ -296,7 +296,7 @@ async def make_offer(
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
         
-        user_id = str(current_user.id)
+        user_id = current_user.user_id
         if user_id not in [conversation.get("participant_1"), conversation.get("participant_2")]:
             raise HTTPException(status_code=403, detail="Not a participant")
         
@@ -348,7 +348,7 @@ async def make_offer(
 async def respond_to_offer(
     offer_id: str,
     response_data: Dict[str, Any],
-    current_user: Annotated[UserProfile, Depends(get_current_user)],
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
     db: Annotated[Any, Depends(get_database)]
 ) -> Dict[str, Any]:
     """Accept, reject, or counter an offer."""
@@ -357,7 +357,7 @@ async def respond_to_offer(
         if not offer:
             raise HTTPException(status_code=404, detail="Offer not found")
         
-        user_id = str(current_user.id)
+        user_id = current_user.user_id
         if user_id != offer.get("seller_id"):
             raise HTTPException(status_code=403, detail="Only seller can respond")
         
@@ -401,7 +401,7 @@ async def respond_to_offer(
 async def get_negotiation_suggestion(
     conversation_id: str,
     context_data: Dict[str, Any],
-    current_user: UserProfile = Depends(get_current_user)
+    current_user: UserResponse = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get AI-powered negotiation suggestions."""
     try:

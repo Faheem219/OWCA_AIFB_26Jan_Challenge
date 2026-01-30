@@ -52,7 +52,7 @@ def sample_market_price():
         unit=PriceUnit.PER_KG,
         arrivals=100,
         arrivals_unit="quintal",
-        date=date.today(),
+        price_date=date.today(),
         source=DataSource.AGMARKNET,
         data_quality=DataQuality.HIGH
     )
@@ -76,7 +76,7 @@ def sample_agmarknet_response():
                 "max_price": "30.00",
                 "modal_price": "25.00",
                 "arrivals": "100",
-                "date": date.today().strftime("%Y-%m-%d")
+                "price_date": date.today().strftime("%Y-%m-%d")
             }
         ]
     }

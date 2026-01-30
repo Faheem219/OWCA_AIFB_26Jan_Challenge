@@ -19,7 +19,7 @@ import httpx
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from ..core.config import settings
-from ..core.redis import get_redis_client
+from ..core.redis import get_redis
 from ..models.market_data import (
     MarketPrice, PriceHistory, DataValidationResult, MarketDataCache,
     DataSource, DataQuality, PriceUnit, AgmarknetApiResponse,
@@ -53,7 +53,7 @@ class MarketDataService:
     
     async def initialize(self):
         """Initialize the service with Redis connection."""
-        self.redis_client = await get_redis_client()
+        self.redis_client = await get_redis()
         
         # Create indexes for efficient querying
         await self._create_indexes()
@@ -200,8 +200,8 @@ class MarketDataService:
         
         # Check date validity
         validation_checks["valid_date"] = (
-            market_price.date <= date.today() and 
-            market_price.date >= date.today() - timedelta(days=365)
+            market_price.price_date <= date.today() and 
+            market_price.price_date >= date.today() - timedelta(days=365)
         )
         if not validation_checks["valid_date"]:
             issues.append("Date is either in the future or too old (>1 year)")
@@ -262,7 +262,7 @@ class MarketDataService:
             documents = []
             for price in market_prices:
                 doc = price.dict()
-                doc["_id"] = f"{price.commodity}_{price.market}_{price.date}_{price.source}"
+                doc["_id"] = f"{price.commodity}_{price.market}_{price.price_date}_{price.source}"
                 documents.append(doc)
             
             # Use upsert to avoid duplicates
@@ -435,14 +435,14 @@ class MarketDataService:
             "avg_price": sum(modal_prices) / len(modal_prices),
             "min_price": min(modal_prices),
             "max_price": max(modal_prices),
-            "latest_date": max(price.date for price in prices).isoformat(),
+            "latest_date": max(price.price_date for price in prices).isoformat(),
             "markets_count": len(set(price.market for price in prices)),
             "states_count": len(set(price.state for price in prices))
         }
         
         # Calculate price trend (simple comparison of first and last prices)
         if len(prices) >= 2:
-            sorted_prices = sorted(prices, key=lambda x: x.date)
+            sorted_prices = sorted(prices, key=lambda x: x.price_date)
             first_price = float(sorted_prices[0].modal_price)
             last_price = float(sorted_prices[-1].modal_price)
             
@@ -509,9 +509,9 @@ class MarketDataService:
                 if external_prices:
                     await self.store_market_data(external_prices)
                     # Merge with existing data
-                    existing_keys = {f"{p.commodity}_{p.market}_{p.date}" for p in prices}
+                    existing_keys = {f"{p.commodity}_{p.market}_{p.price_date}" for p in prices}
                     for price in external_prices:
-                        key = f"{price.commodity}_{price.market}_{price.date}"
+                        key = f"{price.commodity}_{price.market}_{price.price_date}"
                         if key not in existing_keys:
                             prices.append(price)
                 
@@ -529,7 +529,7 @@ class MarketDataService:
             
             # Determine trend
             if len(prices) >= 2:
-                sorted_prices = sorted(prices, key=lambda x: x.date)
+                sorted_prices = sorted(prices, key=lambda x: x.price_date)
                 first_price = float(sorted_prices[0].modal_price)
                 last_price = float(sorted_prices[-1].modal_price)
                 
@@ -590,14 +590,14 @@ class MarketDataService:
             return {"status": "no_data"}
         
         # Sort prices by date
-        sorted_prices = sorted(prices, key=lambda x: x.date)
+        sorted_prices = sorted(prices, key=lambda x: x.price_date)
         modal_prices = [float(p.modal_price) for p in sorted_prices]
         
         trends = {
             "total_records": len(prices),
             "date_range": {
-                "start": sorted_prices[0].date.isoformat(),
-                "end": sorted_prices[-1].date.isoformat()
+                "start": sorted_prices[0].price_date.isoformat(),
+                "end": sorted_prices[-1].price_date.isoformat()
             },
             "price_range": {
                 "min": min(modal_prices),
@@ -728,7 +728,7 @@ class MarketDataService:
                 return self._generate_mock_prediction(commodity, days_ahead)
             
             # Sort prices by date
-            sorted_prices = sorted(prices, key=lambda x: x.date)
+            sorted_prices = sorted(prices, key=lambda x: x.price_date)
             modal_prices = [float(p.modal_price) for p in sorted_prices]
             
             # Calculate trend and seasonality

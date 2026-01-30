@@ -9,9 +9,9 @@ import random
 import hashlib
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from ...core.database import get_database
-from ...core.dependencies import get_current_user
-from ...models.user import UserProfile
+from app.core.database import get_database
+from app.core.dependencies import get_current_user
+from app.models.user import UserProfile
 
 router = APIRouter()
 

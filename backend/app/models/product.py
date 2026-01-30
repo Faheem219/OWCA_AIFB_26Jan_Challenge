@@ -62,9 +62,9 @@ class MultilingualText(BaseModel):
     """Multilingual text with original and translated versions."""
     original_language: SupportedLanguage = Field(..., description="Original language of the text")
     original_text: str = Field(..., description="Original text content")
-    translations: Dict[SupportedLanguage, str] = Field(
+    translations: Dict[str, str] = Field(
         default_factory=dict,
-        description="Translations in different languages"
+        description="Translations in different languages (language code as key)"
     )
     auto_translated: bool = Field(default=False, description="Whether translations were auto-generated")
     last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
@@ -81,7 +81,7 @@ class MultilingualText(BaseModel):
         """
         if language == self.original_language:
             return self.original_text
-        return self.translations.get(language, self.original_text)
+        return self.translations.get(language.value, self.original_text)
     
     def add_translation(self, language: SupportedLanguage, text: str, auto_translated: bool = False) -> None:
         """
@@ -92,7 +92,7 @@ class MultilingualText(BaseModel):
             text: Translated text
             auto_translated: Whether this is an auto-generated translation
         """
-        self.translations[language] = text
+        self.translations[language.value] = text
         if auto_translated:
             self.auto_translated = True
         self.last_updated = datetime.utcnow()

@@ -45,7 +45,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     
     # Connect to databases
     await connect_to_mongo()
-    await connect_to_redis()
+    
+    # Try to connect to Redis (optional)
+    try:
+        await connect_to_redis()
+    except Exception as e:
+        logger.warning(f"Failed to connect to Redis: {e}")
+        logger.info("Application will continue without Redis caching")
     
     # Initialize Elasticsearch
     try:
