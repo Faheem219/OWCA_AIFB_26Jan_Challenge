@@ -97,6 +97,15 @@ async def create_indexes() -> None:
         
         # User collection indexes
         users_collection = database.users
+        
+        # Drop conflicting indexes before creating new ones
+        try:
+            existing_indexes = await users_collection.index_information()
+            if "phone_1" in existing_indexes:
+                await users_collection.drop_index("phone_1")
+        except Exception as drop_err:
+            logger.debug(f"Could not drop phone_1 index: {drop_err}")
+        
         await users_collection.create_index("email", unique=True)
         await users_collection.create_index("phone", unique=True, sparse=True)
         await users_collection.create_index("role")

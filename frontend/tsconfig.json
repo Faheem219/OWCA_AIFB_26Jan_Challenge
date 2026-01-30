@@ -21,8 +21,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        /* Path mapping - ignoreDeprecations added for baseUrl compatibility */
-        "ignoreDeprecations": "6.0",
+        /* Path mapping */
         "baseUrl": ".",
         "paths": {
             "@/*": [

@@ -862,9 +862,19 @@ class UserService:
         Returns:
             UserResponse object
         """
-        # Convert location data
+        # Convert location data - handle empty or missing location gracefully
         location_data = user.get("location", {})
-        location = LocationData(**location_data)
+        if not location_data or not isinstance(location_data, dict):
+            location_data = {}
+        # Use default values for missing required fields
+        location = LocationData(
+            address=location_data.get("address"),
+            city=location_data.get("city"),
+            state=location_data.get("state"),
+            pincode=location_data.get("pincode"),
+            country=location_data.get("country", "India"),
+            coordinates=location_data.get("coordinates")
+        )
         
         # Convert preferences
         preferences_data = user.get("preferences", {})

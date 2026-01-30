@@ -98,6 +98,43 @@ class AuthService:
             )
             
             # Create user creation request
+            # Convert business_type string to BusinessType enum if provided
+            business_type_enum = None
+            if request.business_type:
+                try:
+                    business_type_enum = BusinessType(request.business_type.lower())
+                except ValueError:
+                    business_type_enum = BusinessType.INDIVIDUAL  # Default fallback
+            
+            # Convert product_categories strings to ProductCategory enums
+            product_categories_enums = None
+            if request.product_categories:
+                product_categories_enums = []
+                for cat in request.product_categories:
+                    try:
+                        product_categories_enums.append(ProductCategory(cat.lower()))
+                    except ValueError:
+                        pass  # Skip invalid categories
+                # Default to vegetables if empty after processing
+                if not product_categories_enums and request.role == UserRole.VENDOR:
+                    product_categories_enums = [ProductCategory.VEGETABLES]
+            elif request.role == UserRole.VENDOR:
+                # Default category for vendors
+                product_categories_enums = [ProductCategory.VEGETABLES]
+            
+            # Convert preferred_categories strings to ProductCategory enums for buyers
+            preferred_categories_enums = None
+            if request.preferred_categories:
+                preferred_categories_enums = []
+                for cat in request.preferred_categories:
+                    try:
+                        preferred_categories_enums.append(ProductCategory(cat.lower()))
+                    except ValueError:
+                        pass
+            
+            # Use provided market_location or default to city, state
+            market_loc = request.market_location if request.market_location else f"{request.location_city}, {request.location_state}"
+            
             user_create_request = UserCreateRequest(
                 email=request.email,
                 password=request.password,  # Will be hashed by user service
@@ -106,10 +143,10 @@ class AuthService:
                 preferred_languages=[request.preferred_language],
                 location=location_data,
                 business_name=request.business_name,
-                business_type=request.business_type,
-                product_categories=getattr(request, 'product_categories', []),
-                market_location=f"{request.location_city}, {request.location_state}",
-                preferred_categories=getattr(request, 'preferred_categories', []),
+                business_type=business_type_enum,
+                product_categories=product_categories_enums,
+                market_location=market_loc,
+                preferred_categories=preferred_categories_enums,
                 budget_range=getattr(request, 'budget_range', None)
             )
             

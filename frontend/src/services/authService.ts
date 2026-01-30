@@ -116,11 +116,13 @@ class AuthService {
         // Transform backend user to frontend User type
         const backendUser = data.user
         const verificationStatus = backendUser.verification_status || 'unverified'
+        // Normalize role to uppercase for frontend (backend returns lowercase)
+        const normalizedRole = (backendUser.role || 'buyer').toUpperCase() as UserRole
         const user: User = {
             id: backendUser.user_id || backendUser.id,
             email: backendUser.email,
             phone: backendUser.phone,
-            role: backendUser.role as UserRole,
+            role: normalizedRole,
             preferredLanguages: backendUser.preferred_languages || ['en'],
             location: backendUser.location || { type: 'Point', coordinates: [0, 0] },
             verificationStatus: {
@@ -281,11 +283,13 @@ class AuthService {
         // Transform backend response to frontend User type
         // Backend verification_status is a single string like 'verified', 'unverified', etc.
         const verificationStatus = userData.verification_status || 'unverified'
+        // Normalize role to uppercase for frontend (backend returns lowercase)
+        const normalizedRole = (userData.role || 'buyer').toUpperCase() as UserRole
         return {
             id: userData.user_id,
             email: userData.email,
             phone: userData.phone,
-            role: userData.role as UserRole,
+            role: normalizedRole,
             preferredLanguages: userData.preferred_languages || ['en'],
             location: userData.location || {
                 type: 'Point',

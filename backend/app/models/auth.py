@@ -7,7 +7,7 @@ credentials, tokens, and authentication requests/responses.
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, EmailStr, Field, validator
 
 from .user import UserRole, SupportedLanguage
@@ -85,6 +85,11 @@ class RegisterRequest(BaseModel):
     # Vendor-specific fields
     business_name: Optional[str] = Field(None, description="Business name (required for vendors)")
     business_type: Optional[str] = Field(None, description="Business type (required for vendors)")
+    product_categories: Optional[List[str]] = Field(None, description="Product categories for vendors")
+    market_location: Optional[str] = Field(None, description="Market location for vendors")
+    
+    # Buyer-specific fields
+    preferred_categories: Optional[List[str]] = Field(None, description="Preferred categories for buyers")
     
     # Terms and conditions
     accept_terms: bool = Field(..., description="User must accept terms and conditions")

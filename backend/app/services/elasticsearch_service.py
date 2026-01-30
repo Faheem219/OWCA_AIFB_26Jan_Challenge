@@ -66,11 +66,20 @@ class ElasticsearchService:
     async def _create_text_indexes(self) -> None:
         """Create text indices for product search."""
         try:
-            # Drop existing text index if any
+            # Drop existing text indexes before creating new ones
             try:
-                await self.products_collection.drop_index("product_text_search")
-            except:
-                pass  # Index might not exist
+                # Get all existing indexes and drop any text indexes
+                existing_indexes = await self.products_collection.index_information()
+                for index_name, index_info in existing_indexes.items():
+                    # Check if this is a text index by looking at the key
+                    if index_info.get("key") and any("_fts" in str(k) or "text" in str(v) for k, v in index_info["key"]):
+                        try:
+                            await self.products_collection.drop_index(index_name)
+                            logger.info(f"Dropped existing text index: {index_name}")
+                        except Exception as drop_err:
+                            logger.debug(f"Could not drop index {index_name}: {drop_err}")
+            except Exception as list_err:
+                logger.debug(f"Could not list indexes: {list_err}")
             
             # Create compound text index on multiple fields
             await self.products_collection.create_index(

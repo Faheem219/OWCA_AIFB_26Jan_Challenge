@@ -12,6 +12,7 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, EmailStr, Field, validator
 import phonenumbers
 from phonenumbers import NumberParseException
+import re
 
 
 class SupportedLanguage(str, Enum):
@@ -63,10 +64,10 @@ class ProductCategory(str, Enum):
 
 class LocationData(BaseModel):
     """Geographic location data."""
-    address: str = Field(..., description="Full address")
-    city: str = Field(..., description="City name")
-    state: str = Field(..., description="State name")
-    pincode: str = Field(..., pattern=r"^\d{6}$", description="6-digit pincode")
+    address: Optional[str] = Field(default=None, description="Full address")
+    city: Optional[str] = Field(default=None, description="City name")
+    state: Optional[str] = Field(default=None, description="State name")
+    pincode: Optional[str] = Field(default=None, description="6-digit pincode")
     country: str = Field(default="India", description="Country name")
     coordinates: Optional[List[float]] = Field(
         None, 
@@ -74,6 +75,12 @@ class LocationData(BaseModel):
         min_items=2,
         max_items=2
     )
+    
+    @validator("pincode")
+    def validate_pincode(cls, v):
+        if v is not None and not re.match(r"^\d{6}$", v):
+            raise ValueError("Pincode must be a 6-digit number")
+        return v
     
     @validator("coordinates")
     def validate_coordinates(cls, v):
