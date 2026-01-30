@@ -123,6 +123,7 @@ async def create_sample_users(db):
         
         vendor = {
             "_id": f"vendor_{i}",
+            "user_id": f"vendor_{i}",
             "email": f"vendor{i}@example.com",
             "phone": f"+91{9000000000 + i}",
             "password_hash": pwd_context.hash("password123"),
@@ -156,6 +157,7 @@ async def create_sample_users(db):
         
         buyer = {
             "_id": f"buyer_{i}",
+            "user_id": f"buyer_{i}",
             "email": f"buyer{i}@example.com",
             "phone": f"+91{8000000000 + i}",
             "password_hash": pwd_context.hash("password123"),

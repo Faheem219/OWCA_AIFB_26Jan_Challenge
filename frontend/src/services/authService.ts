@@ -10,6 +10,15 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 export interface LoginRequest {
     email: string
     password: string
+    rememberMe?: boolean
+}
+
+// Backend expects this format
+interface BackendLoginRequest {
+    method: 'email' | 'phone' | 'google' | 'aadhaar'
+    identifier: string
+    password?: string
+    remember_me?: boolean
 }
 
 export interface RegisterRequest {
@@ -68,16 +77,29 @@ class AuthService {
     }
 
     async login(credentials: LoginRequest): Promise<AuthResponse> {
+        // Transform frontend request to backend format
+        const backendRequest: BackendLoginRequest = {
+            method: 'email',
+            identifier: credentials.email,
+            password: credentials.password,
+            remember_me: credentials.rememberMe || false
+        }
+
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(credentials),
+            body: JSON.stringify(backendRequest),
         })
 
         if (!response.ok) {
             const error = await response.json()
+            // Handle FastAPI validation errors (422) which return an array of errors
+            if (error.detail && Array.isArray(error.detail)) {
+                const messages = error.detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ')
+                throw new Error(messages)
+            }
             throw new Error(error.detail || 'Login failed')
         }
 
