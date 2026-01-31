@@ -187,6 +187,12 @@ if settings.DEBUG:
     if not os.path.exists(static_dir):
         os.makedirs(static_dir)
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    
+    # Serve uploads directory for product images
+    uploads_dir = "uploads"
+    if not os.path.exists(uploads_dir):
+        os.makedirs(uploads_dir)
+    app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
 # Request logging middleware

@@ -20,6 +20,7 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import PersonIcon from '@mui/icons-material/Person';
 import TranslateIcon from '@mui/icons-material/Translate';
+import { useSearchParams } from 'react-router-dom';
 import { chatService } from '../../services/chatService';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -43,6 +44,7 @@ interface Message {
 
 export const ChatPage: React.FC = () => {
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -50,11 +52,47 @@ export const ChatPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [sendingMessage, setSendingMessage] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [creatingConversation, setCreatingConversation] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Check for vendor/product query params to create new conversation
+    const vendorId = searchParams.get('vendor');
+    const productId = searchParams.get('product');
 
     useEffect(() => {
         loadConversations();
     }, []);
+
+    // Handle creating conversation from query params
+    useEffect(() => {
+        const createOrFindConversation = async () => {
+            if (vendorId && !creatingConversation && conversations.length >= 0 && !loading) {
+                // Check if conversation with this vendor already exists
+                const existingConv = conversations.find(
+                    conv => conv.other_participant?.id === vendorId
+                );
+
+                if (existingConv) {
+                    setSelectedConversation(existingConv);
+                } else {
+                    // Create new conversation
+                    setCreatingConversation(true);
+                    try {
+                        const newConv = await chatService.createConversation(vendorId, productId || undefined);
+                        setConversations(prev => [newConv, ...prev]);
+                        setSelectedConversation(newConv);
+                    } catch (err) {
+                        console.error('Failed to create conversation:', err);
+                        setError('Failed to start conversation with vendor');
+                    } finally {
+                        setCreatingConversation(false);
+                    }
+                }
+            }
+        };
+
+        createOrFindConversation();
+    }, [vendorId, productId, conversations, loading, creatingConversation]);
 
     useEffect(() => {
         if (selectedConversation) {

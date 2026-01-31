@@ -31,6 +31,7 @@ import {
     LocalShipping,
     Analytics,
     Refresh,
+    LocalOffer,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
@@ -345,6 +346,14 @@ export const VendorDashboard: React.FC = () => {
                                 onClick={() => navigate('/orders')}
                             >
                                 Manage Orders
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                fullWidth
+                                startIcon={<LocalOffer />}
+                                onClick={() => navigate('/deals')}
+                            >
+                                Manage Deals
                             </Button>
                         </Box>
                     </Paper>

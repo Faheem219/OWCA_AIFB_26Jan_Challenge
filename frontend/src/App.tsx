@@ -20,6 +20,11 @@ import { EditProductPage } from './pages/products/EditProductPage'
 import { ChatPage } from './pages/chat/ChatPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { AnalyticsPage } from './pages/vendor/AnalyticsPage'
+import { ManageOrdersPage } from './pages/vendor/ManageOrdersPage'
+import { DealsManagementPage } from './pages/vendor/DealsManagementPage'
+import { SavedItemsPage } from './pages/buyer/SavedItemsPage'
+import { OrderHistoryPage } from './pages/buyer/OrderHistoryPage'
 
 function App() {
     const { isLoading } = useAuth()
@@ -63,6 +68,15 @@ function App() {
                         <Route path="products/create" element={<CreateProductPage />} />
                         <Route path="products/:id/edit" element={<EditProductPage />} />
                         <Route path="products/my" element={<ProductsPage />} />
+                        <Route path="analytics" element={<AnalyticsPage />} />
+                        <Route path="orders" element={<ManageOrdersPage />} />
+                        <Route path="deals" element={<DealsManagementPage />} />
+                    </Route>
+
+                    {/* Buyer-only routes */}
+                    <Route element={<ProtectedRoute requiredRole="BUYER" />}>
+                        <Route path="saved-items" element={<SavedItemsPage />} />
+                        <Route path="order-history" element={<OrderHistoryPage />} />
                     </Route>
                 </Route>
 

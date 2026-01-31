@@ -149,6 +149,12 @@ export const ProfileSetupPage: React.FC = () => {
             const updatedUser = await profileService.updateProfile(updateData)
             updateUser(updatedUser)
 
+            // Mark profile setup as completed to prevent redirect loop
+            localStorage.setItem('profileSetupCompleted', 'true')
+            if (user.role === 'VENDOR') {
+                localStorage.setItem(`vendor_setup_${user.id}`, 'true')
+            }
+
             setSuccess('Profile setup completed successfully!')
 
             // Redirect to dashboard after a short delay
@@ -384,13 +390,28 @@ export const ProfileSetupPage: React.FC = () => {
                     {renderStepContent(activeStep)}
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                        <Button
-                            onClick={handleBack}
-                            disabled={activeStep === 0}
-                            startIcon={<ArrowBack />}
-                        >
-                            Back
-                        </Button>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button
+                                onClick={handleBack}
+                                disabled={activeStep === 0}
+                                startIcon={<ArrowBack />}
+                            >
+                                Back
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    // Skip profile setup
+                                    localStorage.setItem('profileSetupCompleted', 'true')
+                                    if (user.role === 'VENDOR') {
+                                        localStorage.setItem(`vendor_setup_${user.id}`, 'true')
+                                    }
+                                    navigate('/dashboard', { replace: true })
+                                }}
+                                color="inherit"
+                            >
+                                Skip for Now
+                            </Button>
+                        </Box>
 
                         {activeStep === maxSteps - 1 ? (
                             <Button

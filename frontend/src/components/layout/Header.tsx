@@ -72,9 +72,11 @@ export const Header: React.FC = () => {
                     <IconButton color="inherit">
                         <Notifications />
                     </IconButton>
-                    <IconButton color="inherit">
-                        <ShoppingCart />
-                    </IconButton>
+                    {user.role !== 'VENDOR' && (
+                        <IconButton color="inherit" component={RouterLink} to="/cart">
+                            <ShoppingCart />
+                        </IconButton>
+                    )}
                 </>
             )}
 

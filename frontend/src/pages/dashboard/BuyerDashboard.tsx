@@ -101,12 +101,16 @@ export const BuyerDashboard: React.FC = () => {
                 }
             }))
 
-            // Mock stats for buyer
+            // Get real stats from localStorage and user data
+            const likedProducts = JSON.parse(localStorage.getItem('likedProducts') || '[]')
+            const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]')
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+
             setStats({
-                totalPurchases: (user as any)?.total_purchases || 0,
-                savedItems: Math.floor(Math.random() * 10),
-                recentlyViewed: products.length,
-                activeDeals: Math.floor(Math.random() * 5) + 1,
+                totalPurchases: (user as any)?.total_purchases || cart.length || 0,
+                savedItems: likedProducts.length,
+                recentlyViewed: recentlyViewed.length || products.length,
+                activeDeals: 0, // Will be updated when deals feature is implemented
             })
         } catch (err) {
             console.error('Failed to load dashboard data:', err)
@@ -397,26 +401,26 @@ export const BuyerDashboard: React.FC = () => {
                             <Button
                                 variant="outlined"
                                 fullWidth
-                                startIcon={<Store />}
-                                onClick={() => navigate('/vendors')}
+                                startIcon={<Favorite />}
+                                onClick={() => navigate('/saved-items')}
                             >
-                                Find Vendors Near Me
+                                My Saved Items
                             </Button>
                             <Button
                                 variant="outlined"
                                 fullWidth
                                 startIcon={<History />}
-                                onClick={() => navigate('/orders')}
+                                onClick={() => navigate('/order-history')}
                             >
                                 View Order History
                             </Button>
                             <Button
                                 variant="outlined"
                                 fullWidth
-                                startIcon={<Favorite />}
-                                onClick={() => navigate('/wishlist')}
+                                startIcon={<Store />}
+                                onClick={() => navigate('/chat')}
                             >
-                                My Wishlist
+                                My Conversations
                             </Button>
                         </Box>
                     </Paper>

@@ -62,7 +62,7 @@ export const chatService = {
     /**
      * Create a new conversation
      */
-    async createConversation(participantId: string, productId?: string): Promise<{ id: string; existing: boolean }> {
+    async createConversation(participantId: string, productId?: string): Promise<Conversation> {
         const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
             method: 'POST',
             headers: getAuthHeaders(),
@@ -74,7 +74,17 @@ export const chatService = {
         if (!response.ok) {
             throw new Error('Failed to create conversation');
         }
-        return response.json();
+        const data = await response.json();
+        
+        // Return a proper Conversation object
+        return {
+            id: data.id || data.conversation_id,
+            other_participant: data.other_participant || { id: participantId, name: 'Vendor' },
+            product_id: productId,
+            last_message: data.last_message || { content: '', timestamp: null },
+            unread_count: 0,
+            updated_at: data.updated_at || new Date().toISOString(),
+        };
     },
 
     /**

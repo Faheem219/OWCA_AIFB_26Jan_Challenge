@@ -18,10 +18,18 @@ export const DashboardRedirect: React.FC<DashboardRedirectProps> = ({ children }
 
     useEffect(() => {
         if (!isLoading && isAuthenticated && user) {
-            // Check if user needs to complete profile setup
-            const needsProfileSetup = !user.location?.address ||
-                (user.role === 'VENDOR' && !(user as any).businessName) ||
-                user.preferredLanguages.length === 0
+            // Check if profile setup was already completed (stored in localStorage)
+            const profileSetupCompleted = localStorage.getItem('profileSetupCompleted') === 'true'
+            
+            // Only require profile setup if it hasn't been completed and essential info is missing
+            // For vendors: only check businessName if they explicitly haven't set up profile
+            // For buyers: don't require any special setup
+            const needsProfileSetup = !profileSetupCompleted && (
+                user.role === 'VENDOR' && 
+                !(user as any).businessName && 
+                !(user as any).business_name &&
+                !localStorage.getItem(`vendor_setup_${user.id}`)
+            )
 
             if (needsProfileSetup) {
                 navigate('/profile/setup', { replace: true })
