@@ -72,7 +72,11 @@
         "fillDetailsBelow": "अपना खाता बनाने के लिए नीचे विवरण भरें",
         "passwordRequirements": "पासवर्ड कम से कम 8 अक्षर लंबा होना चाहिए",
         "selectAtLeastOneLanguage": "कृपया कम से कम एक पसंदीदा भाषा चुनें",
-        "enterValidLocation": "कृपया एक वैध स्थान दर्ज करें"
+        "enterValidLocation": "कृपया एक वैध स्थान दर्ज करें",
+        "city": "शहर",
+        "state": "राज्य",
+        "pincode": "पिनकोड",
+        "address": "पता"
     },
     "products": {
         "title": "उत्पाद",

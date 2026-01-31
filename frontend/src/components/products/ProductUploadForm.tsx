@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
     Box,
     Card,
@@ -36,11 +36,13 @@ import { useDropzone } from 'react-dropzone'
 import { useTranslation } from '../../hooks/useTranslation'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { productService, ProductCreateRequest } from '../../services/productService'
-import { ProductCategory, MeasurementUnit, QualityGrade } from '../../types'
+import { ProductCategory, MeasurementUnit, QualityGrade, Product } from '../../types'
 
 interface ProductUploadFormProps {
     onSuccess?: (productId: string) => void
     onCancel?: () => void
+    editMode?: boolean
+    existingProduct?: Product | null
 }
 
 interface ImageFile {
@@ -88,7 +90,9 @@ const COMMON_CERTIFICATIONS = [
 
 export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
     onSuccess,
-    onCancel
+    onCancel,
+    editMode = false,
+    existingProduct = null
 }) => {
     const { t } = useTranslation()
     const { currentLanguage } = useLanguage()
@@ -121,6 +125,55 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
     const [uploadProgress, setUploadProgress] = useState(0)
+
+    // Populate form data when editing
+    useEffect(() => {
+        if (editMode && existingProduct) {
+            const productName = typeof existingProduct.name === 'object'
+                ? (existingProduct.name.originalText || '')
+                : (existingProduct.name || '')
+            const productDescription = typeof existingProduct.description === 'object'
+                ? (existingProduct.description.originalText || '')
+                : (existingProduct.description || '')
+
+            // Cast to any to access dynamic properties from backend
+            const product = existingProduct as any
+
+            setFormData({
+                name: productName,
+                description: productDescription,
+                category: existingProduct.category || '',
+                subcategory: existingProduct.subcategory || '',
+                basePrice: existingProduct.basePrice?.toString() || '',
+                unit: (existingProduct.unit || 'kg') as MeasurementUnit,
+                quantityAvailable: existingProduct.quantityAvailable?.toString() || '',
+                minimumOrder: product.minimumOrder?.toString() || product.minimum_order?.toString() || '1',
+                maximumOrder: product.maximumOrder?.toString() || product.maximum_order?.toString() || '',
+                qualityGrade: (existingProduct.qualityGrade || product.quality_grade || 'standard') as QualityGrade,
+                harvestDate: existingProduct.harvestDate || product.harvest_date || '',
+                expiryDate: product.expiryDate || product.expiry_date || '',
+                origin: product.origin || '',
+                variety: product.variety || '',
+                marketName: product.marketName || product.market_name || '',
+                negotiable: product.negotiable !== false,
+                tags: existingProduct.tags || [],
+                certifications: product.certifications || []
+            })
+
+            // Load existing images if available
+            if (existingProduct.images && existingProduct.images.length > 0) {
+                const existingImages: ImageFile[] = existingProduct.images.map((img, index) => ({
+                    file: null as any, // Existing images don't have a file
+                    preview: img.url,
+                    isPrimary: img.isPrimary || index === 0,
+                    uploading: false,
+                    uploaded: true,
+                    url: img.url
+                }))
+                setImages(existingImages)
+            }
+        }
+    }, [editMode, existingProduct])
 
     // Image upload handling
     const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -244,7 +297,7 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
         setUploadProgress(0)
 
         try {
-            // First create the product without images
+            // Build product data
             const productData: ProductCreateRequest = {
                 name_text: formData.name,
                 name_language: currentLanguage,
@@ -271,16 +324,33 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
 
             setUploadProgress(20)
 
-            // Create product
-            const product = await productService.createProduct(productData)
-            setUploadProgress(40)
+            let productId: string
 
-            // Upload images
-            await uploadImages(product.id)
+            if (editMode && existingProduct) {
+                // Update existing product
+                await productService.updateProduct(existingProduct.id, productData)
+                productId = existingProduct.id
+                setUploadProgress(40)
+
+                // Upload new images (only those without URLs)
+                const newImages = images.filter(img => !img.url)
+                if (newImages.length > 0) {
+                    await uploadImages(productId)
+                }
+            } else {
+                // Create new product
+                const product = await productService.createProduct(productData)
+                productId = product.id
+                setUploadProgress(40)
+
+                // Upload images
+                await uploadImages(productId)
+            }
+
             setUploadProgress(80)
 
             // Update product with image URLs
-            await productService.updateProduct(product.id, {
+            await productService.updateProduct(productId, {
                 // Note: The backend should handle image association through the upload endpoint
             })
 
@@ -289,11 +359,11 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
 
             // Call success callback
             if (onSuccess) {
-                onSuccess(product.id)
+                onSuccess(productId)
             }
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to create product')
+            setError(err instanceof Error ? err.message : editMode ? 'Failed to update product' : 'Failed to create product')
         } finally {
             setLoading(false)
         }
@@ -305,10 +375,10 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
                 <CardContent>
                     <Box textAlign="center" py={4}>
                         <Typography variant="h5" color="primary" gutterBottom>
-                            Product Created Successfully!
+                            {editMode ? 'Product Updated Successfully!' : 'Product Created Successfully!'}
                         </Typography>
                         <Typography variant="body1" color="text.secondary" gutterBottom>
-                            Your product has been listed in the marketplace.
+                            {editMode ? 'Your product has been updated.' : 'Your product has been listed in the marketplace.'}
                         </Typography>
                         <Button
                             variant="contained"
@@ -327,7 +397,7 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
         <Card>
             <CardContent>
                 <Typography variant="h5" gutterBottom>
-                    Add New Product
+                    {editMode ? 'Edit Product' : 'Add New Product'}
                 </Typography>
 
                 {error && (
@@ -747,7 +817,9 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
                                     disabled={loading}
                                     startIcon={loading ? <CircularProgress size={20} /> : <UploadIcon />}
                                 >
-                                    {loading ? 'Creating Product...' : 'Create Product'}
+                                    {loading 
+                                        ? (editMode ? 'Updating Product...' : 'Creating Product...') 
+                                        : (editMode ? 'Update Product' : 'Create Product')}
                                 </Button>
                             </Box>
                         </Grid>

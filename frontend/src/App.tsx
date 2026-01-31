@@ -16,6 +16,7 @@ import { VendorDashboard, BuyerDashboard } from './pages/dashboard'
 import { ProductsPage } from './pages/products/ProductsPage'
 import { ProductDetailPage } from './pages/products/ProductDetailPage'
 import { CreateProductPage } from './pages/products/CreateProductPage'
+import { EditProductPage } from './pages/products/EditProductPage'
 import { ChatPage } from './pages/chat/ChatPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -60,6 +61,7 @@ function App() {
                     <Route element={<ProtectedRoute requiredRole="VENDOR" />}>
                         <Route path="products/new" element={<CreateProductPage />} />
                         <Route path="products/create" element={<CreateProductPage />} />
+                        <Route path="products/:id/edit" element={<EditProductPage />} />
                         <Route path="products/my" element={<ProductsPage />} />
                     </Route>
                 </Route>

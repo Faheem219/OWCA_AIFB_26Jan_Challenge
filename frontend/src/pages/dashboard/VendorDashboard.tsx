@@ -277,6 +277,7 @@ export const VendorDashboard: React.FC = () => {
                                             </ListItemAvatar>
                                             <ListItemText
                                                 primary={product.name}
+                                                secondaryTypographyProps={{ component: 'div' }}
                                                 secondary={
                                                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.5 }}>
                                                         <Chip

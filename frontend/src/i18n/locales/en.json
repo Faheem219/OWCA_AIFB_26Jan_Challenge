@@ -85,7 +85,11 @@
         "languageRequired": "Please select at least one preferred language",
         "locationRequired": "Please enter your location",
         "businessNameRequired": "Business name is required for vendors",
-        "termsRequired": "You must agree to the terms and conditions"
+        "termsRequired": "You must agree to the terms and conditions",
+        "city": "City",
+        "state": "State",
+        "pincode": "Pincode",
+        "address": "Address"
     },
     "products": {
         "title": "Products",
