@@ -12,6 +12,7 @@ import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { ProfileSetupPage } from './pages/auth/ProfileSetupPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { VendorDashboard, BuyerDashboard } from './pages/dashboard'
 import { ProductsPage } from './pages/products/ProductsPage'
 import { ProductDetailPage } from './pages/products/ProductDetailPage'
 import { CreateProductPage } from './pages/products/CreateProductPage'
@@ -48,6 +49,8 @@ function App() {
                 {/* Protected routes */}
                 <Route element={<ProtectedRoute />}>
                     <Route path="dashboard" element={<DashboardRedirect><DashboardPage /></DashboardRedirect>} />
+                    <Route path="dashboard/vendor" element={<VendorDashboard />} />
+                    <Route path="dashboard/buyer" element={<BuyerDashboard />} />
                     <Route path="profile" element={<ProfilePage />} />
                     <Route path="profile/setup" element={<ProfileSetupPage />} />
                     <Route path="chat" element={<ChatPage />} />
@@ -55,7 +58,9 @@ function App() {
 
                     {/* Vendor-only routes */}
                     <Route element={<ProtectedRoute requiredRole="VENDOR" />}>
+                        <Route path="products/new" element={<CreateProductPage />} />
                         <Route path="products/create" element={<CreateProductPage />} />
+                        <Route path="products/my" element={<ProductsPage />} />
                     </Route>
                 </Route>
 

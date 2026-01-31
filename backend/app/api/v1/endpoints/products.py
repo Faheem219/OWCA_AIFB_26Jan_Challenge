@@ -30,6 +30,39 @@ product_service = ProductService()
 image_service = ImageService()
 
 
+@router.get("/my-products", response_model=List[ProductResponse])
+async def get_my_products(
+    status_filter: Optional[ProductStatus] = None,
+    limit: int = 50,
+    skip: int = 0,
+    current_user: UserResponse = Depends(get_current_user)
+) -> List[ProductResponse]:
+    """
+    Get products for the current authenticated vendor.
+    
+    Args:
+        status_filter: Filter by product status
+        limit: Maximum results to return
+        skip: Number of results to skip
+        current_user: Current authenticated user
+        
+    Returns:
+        List of current user's products
+    """
+    try:
+        return await product_service.get_vendor_products(
+            vendor_id=current_user.user_id,
+            status=status_filter,
+            limit=min(limit, 100),
+            skip=max(skip, 0)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve your products"
+        )
+
+
 @router.post("/search/initialize")
 async def initialize_search_index(
     current_user: UserResponse = Depends(get_current_user)

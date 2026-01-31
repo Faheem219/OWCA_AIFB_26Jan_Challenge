@@ -11,6 +11,12 @@ import {
     Step,
     StepLabel,
     Grid,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    FormHelperText,
+    TextField,
 } from '@mui/material'
 import { CheckCircle, ArrowBack, ArrowForward } from '@mui/icons-material'
 import { useAuth } from '../../hooks/useAuth'
@@ -21,6 +27,15 @@ import { profileService } from '../../services/profileService'
 import { SupportedLanguage, LocationData } from '../../types'
 
 const steps = ['Languages', 'Location', 'Business Details']
+
+// Valid business types matching backend enum
+const businessTypeOptions = [
+    { value: 'individual', label: 'Individual Seller' },
+    { value: 'small_business', label: 'Small Business' },
+    { value: 'cooperative', label: 'Cooperative' },
+    { value: 'wholesaler', label: 'Wholesaler' },
+    { value: 'retailer', label: 'Retailer' },
+]
 
 export const ProfileSetupPage: React.FC = () => {
     const navigate = useNavigate()
@@ -199,61 +214,50 @@ export const ProfileSetupPage: React.FC = () => {
                             </Typography>
                             <Grid container spacing={3}>
                                 <Grid item xs={12}>
-                                    <input
-                                        type="text"
+                                    <TextField
+                                        fullWidth
                                         name="businessName"
-                                        placeholder="Business Name"
+                                        label="Business Name"
                                         value={formData.businessName}
                                         onChange={handleInputChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            border: validationErrors.businessName ? '2px solid red' : '1px solid #ccc',
-                                            borderRadius: '4px',
-                                            fontSize: '16px',
-                                        }}
+                                        error={!!validationErrors.businessName}
+                                        helperText={validationErrors.businessName}
                                     />
-                                    {validationErrors.businessName && (
-                                        <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-                                            {validationErrors.businessName}
-                                        </Typography>
-                                    )}
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <input
-                                        type="text"
-                                        name="businessType"
-                                        placeholder="Business Type (e.g., Wholesale, Retail, Farm)"
-                                        value={formData.businessType}
-                                        onChange={handleInputChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            border: validationErrors.businessType ? '2px solid red' : '1px solid #ccc',
-                                            borderRadius: '4px',
-                                            fontSize: '16px',
-                                        }}
-                                    />
-                                    {validationErrors.businessType && (
-                                        <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-                                            {validationErrors.businessType}
-                                        </Typography>
-                                    )}
+                                    <FormControl fullWidth error={!!validationErrors.businessType}>
+                                        <InputLabel id="business-type-label">Business Type</InputLabel>
+                                        <Select
+                                            labelId="business-type-label"
+                                            name="businessType"
+                                            value={formData.businessType}
+                                            onChange={(e) => {
+                                                setFormData(prev => ({ ...prev, businessType: e.target.value as string }))
+                                                if (validationErrors.businessType) {
+                                                    setValidationErrors(prev => ({ ...prev, businessType: '' }))
+                                                }
+                                            }}
+                                            label="Business Type"
+                                        >
+                                            {businessTypeOptions.map((option) => (
+                                                <MenuItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        {validationErrors.businessType && (
+                                            <FormHelperText>{validationErrors.businessType}</FormHelperText>
+                                        )}
+                                    </FormControl>
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <input
-                                        type="tel"
+                                    <TextField
+                                        fullWidth
                                         name="phone"
-                                        placeholder="Phone Number (Optional)"
+                                        label="Phone Number (Optional)"
+                                        type="tel"
                                         value={formData.phone}
                                         onChange={handleInputChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            border: '1px solid #ccc',
-                                            borderRadius: '4px',
-                                            fontSize: '16px',
-                                        }}
                                     />
                                 </Grid>
                             </Grid>
@@ -270,19 +274,13 @@ export const ProfileSetupPage: React.FC = () => {
                             </Typography>
                             <Grid container spacing={3}>
                                 <Grid item xs={12}>
-                                    <input
-                                        type="tel"
+                                    <TextField
+                                        fullWidth
                                         name="phone"
-                                        placeholder="Phone Number (Optional)"
+                                        label="Phone Number (Optional)"
+                                        type="tel"
                                         value={formData.phone}
                                         onChange={handleInputChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            border: '1px solid #ccc',
-                                            borderRadius: '4px',
-                                            fontSize: '16px',
-                                        }}
                                     />
                                 </Grid>
                             </Grid>

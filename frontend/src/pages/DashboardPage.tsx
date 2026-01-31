@@ -1,17 +1,29 @@
 import React from 'react'
-import { Container, Typography, Box } from '@mui/material'
+import { useAuth } from '../hooks/useAuth'
+import { VendorDashboard, BuyerDashboard } from './dashboard'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { Navigate } from 'react-router-dom'
 
 export const DashboardPage: React.FC = () => {
-    return (
-        <Container maxWidth="lg">
-            <Box sx={{ py: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    Dashboard
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Dashboard functionality will be implemented in later tasks
-                </Typography>
-            </Box>
-        </Container>
-    )
+    const { user, isLoading } = useAuth()
+
+    if (isLoading) {
+        return <LoadingSpinner message="Loading..." />
+    }
+
+    if (!user) {
+        return <Navigate to="/login" replace />
+    }
+
+    // Check user role and render appropriate dashboard
+    const role = (user as any).role?.toLowerCase() || user.role?.toLowerCase()
+
+    if (role === 'vendor') {
+        return <VendorDashboard />
+    } else if (role === 'buyer') {
+        return <BuyerDashboard />
+    }
+
+    // Default to buyer dashboard if role is unknown
+    return <BuyerDashboard />
 }

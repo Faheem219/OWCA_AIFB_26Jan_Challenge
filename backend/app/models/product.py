@@ -103,7 +103,7 @@ class LocationData(BaseModel):
     address: str = Field(..., description="Full address")
     city: str = Field(..., description="City name")
     state: str = Field(..., description="State name")
-    pincode: str = Field(..., pattern=r"^\d{6}$", description="6-digit pincode")
+    pincode: str = Field(..., description="Location pincode (any format accepted)")
     country: str = Field(default="India", description="Country name")
     coordinates: Optional[List[float]] = Field(
         None, 

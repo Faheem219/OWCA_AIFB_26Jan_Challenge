@@ -80,7 +80,7 @@ class RegisterRequest(BaseModel):
     full_name: str = Field(..., description="User's full name")
     location_city: str = Field(..., description="User's city")
     location_state: str = Field(..., description="User's state")
-    location_pincode: str = Field(..., pattern=r"^\d{6}$", description="6-digit pincode")
+    location_pincode: str = Field(..., description="Location pincode (any format accepted)")
     
     # Vendor-specific fields
     business_name: Optional[str] = Field(None, description="Business name (required for vendors)")

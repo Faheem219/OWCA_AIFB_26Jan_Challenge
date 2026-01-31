@@ -54,6 +54,11 @@ async def get_current_user_id(
         raise credentials_exception
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 async def get_current_user(
     user_id: Annotated[str, Depends(get_current_user_id)]
 ) -> UserResponse:
@@ -69,10 +74,12 @@ async def get_current_user(
     Raises:
         HTTPException: If user not found or inactive
     """
+    logger.info(f"Looking up user with ID: {user_id}")
     user_service = UserService()
     user = await user_service.get_user_by_id(user_id)
     
     if user is None:
+        logger.error(f"User not found for ID: {user_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"

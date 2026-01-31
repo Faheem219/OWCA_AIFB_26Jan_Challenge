@@ -134,7 +134,7 @@ class ProductService {
             ...productData,
             category: this.categoryToBackend(productData.category)
         }
-        
+
         const response = await fetch(`${API_BASE_URL}/products/`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
@@ -240,6 +240,30 @@ class ProductService {
 
         const result = await response.json()
         return result.map((p: any) => this.transformBackendProduct(p))
+    }
+
+    async getMyProducts(status?: string, limit: number = 50, skip: number = 0): Promise<{ products: Product[], total: number }> {
+        const params = new URLSearchParams()
+        if (status) params.append('status_filter', status)
+        params.append('limit', limit.toString())
+        params.append('skip', skip.toString())
+
+        const response = await fetch(`${API_BASE_URL}/products/my-products?${params.toString()}`, {
+            headers: this.getAuthHeaders(),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Failed to get my products')
+        }
+
+        const result = await response.json()
+        // Handle both array and object responses and transform to Product type
+        if (Array.isArray(result)) {
+            return { products: result.map((p: any) => this.transformBackendProduct(p)), total: result.length }
+        }
+        const products = (result.products || []).map((p: any) => this.transformBackendProduct(p))
+        return { products, total: result.total || products.length }
     }
 
     async updateProductAvailability(productId: string, quantityAvailable: number): Promise<Product> {

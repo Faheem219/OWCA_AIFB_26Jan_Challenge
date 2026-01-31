@@ -300,10 +300,11 @@ class ElasticsearchService:
         elif query.sort_by == "popularity":
             sort_criteria.append(("views_count", -1))
         elif query.sort_by == "relevance":
-            # Relevance is handled by text score
-            pass
-        else:
-            # Default: newest first
+            # Relevance is handled by text score, but provide a fallback for non-text queries
+            sort_criteria.append(("created_at", -1))
+        
+        # Always ensure we have at least one sort criterion (fallback to newest first)
+        if not sort_criteria:
             sort_criteria.append(("created_at", -1))
         
         return sort_criteria

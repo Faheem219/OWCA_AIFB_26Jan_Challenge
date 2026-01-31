@@ -67,7 +67,7 @@ class LocationData(BaseModel):
     address: Optional[str] = Field(default=None, description="Full address")
     city: Optional[str] = Field(default=None, description="City name")
     state: Optional[str] = Field(default=None, description="State name")
-    pincode: Optional[str] = Field(default=None, description="6-digit pincode")
+    pincode: Optional[str] = Field(default=None, description="Location pincode (any format accepted)")
     country: str = Field(default="India", description="Country name")
     coordinates: Optional[List[float]] = Field(
         None, 
@@ -75,12 +75,6 @@ class LocationData(BaseModel):
         min_items=2,
         max_items=2
     )
-    
-    @validator("pincode")
-    def validate_pincode(cls, v):
-        if v is not None and not re.match(r"^\d{6}$", v):
-            raise ValueError("Pincode must be a 6-digit number")
-        return v
     
     @validator("coordinates")
     def validate_coordinates(cls, v):

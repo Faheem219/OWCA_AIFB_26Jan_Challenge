@@ -177,8 +177,9 @@ class UserService:
         if not user_data.location.state or not user_data.location.state.strip():
             raise ValidationException("State is required in location")
         
-        if not user_data.location.pincode or len(user_data.location.pincode) != 6:
-            raise ValidationException("Valid 6-digit pincode is required")
+        # Pincode is optional but if provided must not be empty
+        if user_data.location.pincode is not None and not user_data.location.pincode.strip():
+            raise ValidationException("Pincode cannot be empty if provided")
         
         # Validate preferred languages
         if not user_data.preferred_languages or len(user_data.preferred_languages) == 0:
@@ -420,11 +421,24 @@ class UserService:
         """
         try:
             db = await get_database()
+            logger.info(f"Searching for user with user_id: {user_id}")
             user = await db.users.find_one({"user_id": user_id})
+            
+            if not user:
+                logger.warning(f"No user found with user_id: {user_id}")
+                # Try by _id as fallback
+                try:
+                    from bson import ObjectId
+                    user = await db.users.find_one({"_id": ObjectId(user_id)})
+                    if user:
+                        logger.info(f"Found user by _id instead of user_id")
+                except:
+                    pass
             
             if not user:
                 return None
             
+            logger.info(f"Found user: {user.get('email')}")
             return self._convert_user_to_response(user)
             
         except Exception as e:
