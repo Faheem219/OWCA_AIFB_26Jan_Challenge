@@ -198,13 +198,25 @@ class ProductService {
     async searchProducts(query: ProductSearchQuery): Promise<ProductSearchResponse> {
         const params = new URLSearchParams()
 
-        // Add query parameters
+        // Add query parameters with proper conversion
         Object.entries(query).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
                 if (Array.isArray(value)) {
-                    value.forEach(item => params.append(key, item.toString()))
+                    value.forEach(item => {
+                        // Convert quality grades to lowercase
+                        if (key === 'quality_grades') {
+                            params.append(key, item.toString().toLowerCase())
+                        } else {
+                            params.append(key, item.toString())
+                        }
+                    })
                 } else {
-                    params.append(key, value.toString())
+                    // Convert category to lowercase for backend
+                    if (key === 'category') {
+                        params.append(key, value.toString().toLowerCase())
+                    } else {
+                        params.append(key, value.toString())
+                    }
                 }
             }
         })

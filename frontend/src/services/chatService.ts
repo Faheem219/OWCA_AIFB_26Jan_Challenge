@@ -76,13 +76,13 @@ export const chatService = {
         }
         const data = await response.json();
         
-        // Return a proper Conversation object
+        // Return a proper Conversation object from backend response
         return {
             id: data.id || data.conversation_id,
-            other_participant: data.other_participant || { id: participantId, name: 'Vendor' },
-            product_id: productId,
+            other_participant: data.other_participant || { id: participantId, name: 'Unknown' },
+            product_id: data.product_id || productId,
             last_message: data.last_message || { content: '', timestamp: null },
-            unread_count: 0,
+            unread_count: data.unread_count || 0,
             updated_at: data.updated_at || new Date().toISOString(),
         };
     },

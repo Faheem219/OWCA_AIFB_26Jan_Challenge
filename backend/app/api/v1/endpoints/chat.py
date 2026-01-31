@@ -6,12 +6,15 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisco
 from typing import Dict, Any, List, Annotated
 from datetime import datetime, timedelta
 import uuid
+import logging
 
 from app.core.database import get_database
 from app.core.dependencies import get_current_user
 from app.models.user import UserResponse
 from app.services.translation_service import translation_service
 from app.services.ai_service import ai_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -87,6 +90,7 @@ async def get_conversations(
     """Get user's chat conversations."""
     try:
         user_id = current_user.user_id
+        logger.info(f"Getting conversations for user_id: {user_id}")
         
         conversations = await db.conversations.find({
             "$or": [
@@ -94,6 +98,8 @@ async def get_conversations(
                 {"participant_2": user_id}
             ]
         }).sort("updated_at", -1).to_list(length=50)
+        
+        logger.info(f"Found {len(conversations)} conversations for user {user_id}")
         
         formatted_conversations = []
         for conv in conversations:
@@ -103,13 +109,24 @@ async def get_conversations(
             )
             
             other_user_id = conv["participant_2"] if conv["participant_1"] == user_id else conv["participant_1"]
-            other_user = await db.users.find_one({"_id": other_user_id})
+            other_user = await db.users.find_one({"user_id": other_user_id})
+            
+            # Get name from business_name (vendor) or email (buyer) - check multiple fields
+            other_name = "Unknown"
+            if other_user:
+                other_name = (
+                    other_user.get("business_name") or 
+                    other_user.get("profile", {}).get("full_name") or
+                    other_user.get("profile", {}).get("business_name") or
+                    other_user.get("email", "").split("@")[0] or
+                    "Unknown"
+                )
             
             formatted_conversations.append({
                 "id": str(conv["_id"]),
                 "other_participant": {
                     "id": other_user_id,
-                    "name": other_user.get("profile", {}).get("full_name", "Unknown") if other_user else "Unknown"
+                    "name": other_name
                 },
                 "product_id": conv.get("product_id"),
                 "last_message": {
@@ -138,8 +155,22 @@ async def create_conversation(
         other_participant_id = conversation_data.get("participant_id")
         product_id = conversation_data.get("product_id")
         
+        logger.info(f"Creating conversation: user_id={user_id}, other_participant_id={other_participant_id}, product_id={product_id}")
+        
         if not other_participant_id:
             raise HTTPException(status_code=400, detail="Participant ID is required")
+        
+        # Get other participant info for response
+        other_user = await db.users.find_one({"user_id": other_participant_id})
+        other_name = "Unknown"
+        if other_user:
+            other_name = (
+                other_user.get("business_name") or 
+                other_user.get("profile", {}).get("full_name") or
+                other_user.get("profile", {}).get("business_name") or
+                other_user.get("email", "").split("@")[0] or
+                "Unknown"
+            )
         
         existing = await db.conversations.find_one({
             "$or": [
@@ -150,7 +181,17 @@ async def create_conversation(
         })
         
         if existing:
-            return {"id": str(existing["_id"]), "message": "Conversation already exists", "existing": True}
+            logger.info(f"Conversation already exists: {existing['_id']}")
+            return {
+                "id": str(existing["_id"]), 
+                "other_participant": {"id": other_participant_id, "name": other_name},
+                "product_id": product_id,
+                "last_message": {"content": "", "timestamp": None},
+                "unread_count": 0,
+                "updated_at": existing.get("updated_at").isoformat() if existing.get("updated_at") else None,
+                "message": "Conversation already exists", 
+                "existing": True
+            }
         
         conversation_id = str(uuid.uuid4())
         conversation = {
@@ -165,7 +206,17 @@ async def create_conversation(
         }
         
         await db.conversations.insert_one(conversation)
-        return {"id": conversation_id, "participant_id": other_participant_id, "product_id": product_id, "message": "Conversation created", "existing": False}
+        logger.info(f"Created new conversation: {conversation_id}")
+        return {
+            "id": conversation_id, 
+            "other_participant": {"id": other_participant_id, "name": other_name},
+            "product_id": product_id,
+            "last_message": {"content": "", "timestamp": None},
+            "unread_count": 0,
+            "updated_at": datetime.utcnow().isoformat(),
+            "message": "Conversation created", 
+            "existing": False
+        }
         
     except HTTPException:
         raise

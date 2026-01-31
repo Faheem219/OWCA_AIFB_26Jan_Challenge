@@ -2,11 +2,14 @@
 Product management endpoints for marketplace operations.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
 from typing import Dict, Any, List, Optional
 from decimal import Decimal
+from datetime import datetime
+import logging
 
 from app.core.dependencies import get_current_user
+from app.core.database import get_database
 from app.core.exceptions import NotFoundException, ValidationException, AuthorizationException
 from app.models.user import UserResponse
 from app.models.product import (
@@ -20,10 +23,13 @@ from app.models.product import (
     QualityGrade,
     MeasurementUnit,
     SupportedLanguage,
-    ProductCategory
+    ProductCategory,
+    ImageReference
 )
 from app.services.product_service import ProductService
 from app.services.image_service import ImageService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 product_service = ProductService()
@@ -287,7 +293,7 @@ async def search_products(
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
     radius_km: Optional[float] = None,
-    quality_grades: Optional[List[QualityGrade]] = None,
+    quality_grades: Optional[List[QualityGrade]] = Query(None),
     available_only: bool = True,
     organic_only: bool = False,
     sort_by: str = "relevance",
@@ -492,8 +498,47 @@ async def upload_product_image(
             content_type=file.content_type or "image/jpeg"
         )
         
-        # TODO: Update product with new image reference
-        # This would require updating the product service to handle image updates
+        # Update product with new image reference
+        db = await get_database()
+        
+        # Create image reference dict for database
+        new_image = {
+            "image_id": image_ref.image_id,
+            "image_url": image_ref.image_url,
+            "thumbnail_url": image_ref.thumbnail_url or image_ref.image_url,
+            "alt_text": alt_text,
+            "is_primary": is_primary,
+            "uploaded_at": datetime.utcnow()
+        }
+        
+        # Get current images
+        current_product = await db.products.find_one({"product_id": product_id})
+        current_images = current_product.get("images", [])
+        
+        # If this is primary, mark all other images as not primary
+        if is_primary:
+            for img in current_images:
+                img["is_primary"] = False
+        
+        # If this is the first image, make it primary
+        if len(current_images) == 0:
+            new_image["is_primary"] = True
+        
+        # Add new image
+        current_images.append(new_image)
+        
+        # Update product
+        await db.products.update_one(
+            {"product_id": product_id},
+            {
+                "$set": {
+                    "images": current_images,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"Image uploaded successfully for product {product_id}: {image_ref.image_url}")
         
         return ImageUploadResponse(
             image_id=image_ref.image_id,

@@ -31,16 +31,18 @@ import {
     History,
     Store,
     Refresh,
+    ShoppingBag,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { productService } from '../../services/productService'
+import { orderService } from '../../services/orderService'
 import { LoadingSpinner } from '../../components/common/LoadingSpinner'
 
 interface DashboardStats {
     totalPurchases: number
     savedItems: number
-    recentlyViewed: number
+    activeOrders: number
     activeDeals: number
 }
 
@@ -61,7 +63,7 @@ export const BuyerDashboard: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats>({
         totalPurchases: 0,
         savedItems: 0,
-        recentlyViewed: 0,
+        activeOrders: 0,
         activeDeals: 0,
     })
     const [featuredProducts, setFeaturedProducts] = useState<ProductCard[]>([])
@@ -103,13 +105,24 @@ export const BuyerDashboard: React.FC = () => {
 
             // Get real stats from localStorage and user data
             const likedProducts = JSON.parse(localStorage.getItem('likedProducts') || '[]')
-            const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]')
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+            
+            // Fetch actual order stats from API
+            let totalOrders = 0
+            let activeOrders = 0
+            try {
+                const ordersResponse = await orderService.getBuyerOrders()
+                totalOrders = ordersResponse.total
+                activeOrders = ordersResponse.orders.filter(
+                    o => ['pending', 'confirmed', 'shipped'].includes(o.status)
+                ).length
+            } catch (err) {
+                console.log('Could not fetch order stats')
+            }
 
             setStats({
-                totalPurchases: (user as any)?.total_purchases || cart.length || 0,
+                totalPurchases: totalOrders,
                 savedItems: likedProducts.length,
-                recentlyViewed: recentlyViewed.length || products.length,
+                activeOrders: activeOrders,
                 activeDeals: 0, // Will be updated when deals feature is implemented
             })
         } catch (err) {
@@ -228,7 +241,7 @@ export const BuyerDashboard: React.FC = () => {
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
-                        title="Total Purchases"
+                        title="Total Orders"
                         value={stats.totalPurchases}
                         icon={<ShoppingCart />}
                         color="#1976d2"
@@ -244,9 +257,9 @@ export const BuyerDashboard: React.FC = () => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
-                        title="Recently Viewed"
-                        value={stats.recentlyViewed}
-                        icon={<History />}
+                        title="Active Orders"
+                        value={stats.activeOrders}
+                        icon={<ShoppingBag />}
                         color="#ff9800"
                     />
                 </Grid>
@@ -405,6 +418,14 @@ export const BuyerDashboard: React.FC = () => {
                                 onClick={() => navigate('/saved-items')}
                             >
                                 My Saved Items
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                fullWidth
+                                startIcon={<ShoppingCart />}
+                                onClick={() => navigate('/buyer/orders')}
+                            >
+                                My Orders
                             </Button>
                             <Button
                                 variant="outlined"

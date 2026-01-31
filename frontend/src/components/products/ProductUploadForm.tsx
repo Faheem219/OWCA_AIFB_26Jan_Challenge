@@ -218,8 +218,24 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
     const uploadImages = async (productId: string): Promise<string[]> => {
         const uploadedUrls: string[] = []
 
+        // Only upload images that have actual files (new images, not existing ones)
+        const imagesToUpload = images.filter(img => img.file && !img.uploaded)
+        
+        if (imagesToUpload.length === 0) {
+            return uploadedUrls
+        }
+
         for (let i = 0; i < images.length; i++) {
             const image = images[i]
+            
+            // Skip already uploaded images or images without files
+            if (!image.file || image.uploaded) {
+                if (image.url) {
+                    uploadedUrls.push(image.url)
+                }
+                continue
+            }
+            
             try {
                 setImages(prev => prev.map((img, idx) =>
                     idx === i ? { ...img, uploading: true } : img
@@ -238,10 +254,12 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
                     idx === i ? { ...img, uploading: false, uploaded: true, url: result.image_url } : img
                 ))
             } catch (error) {
+                console.error('Image upload failed:', error)
                 setImages(prev => prev.map((img, idx) =>
                     idx === i ? { ...img, uploading: false, error: 'Upload failed' } : img
                 ))
-                throw error
+                // Continue with other images instead of throwing
+                // throw error
             }
         }
 
@@ -276,7 +294,7 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
         if (!formData.category) return 'Category is required'
         if (!formData.basePrice || parseFloat(formData.basePrice) <= 0) return 'Valid base price is required'
         if (!formData.quantityAvailable || parseInt(formData.quantityAvailable) <= 0) return 'Valid quantity is required'
-        if (images.length === 0) return 'At least one product image is required'
+        // Images are optional - removed mandatory image requirement
         if (formData.maximumOrder && parseInt(formData.maximumOrder) < parseInt(formData.minimumOrder)) {
             return 'Maximum order cannot be less than minimum order'
         }
@@ -346,13 +364,6 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
                 // Upload images
                 await uploadImages(productId)
             }
-
-            setUploadProgress(80)
-
-            // Update product with image URLs
-            await productService.updateProduct(productId, {
-                // Note: The backend should handle image association through the upload endpoint
-            })
 
             setUploadProgress(100)
             setSuccess(true)
@@ -714,7 +725,7 @@ export const ProductUploadForm: React.FC<ProductUploadFormProps> = ({
                         {/* Images */}
                         <Grid item xs={12}>
                             <Typography variant="h6" gutterBottom>
-                                Product Images
+                                Product Images (Optional)
                             </Typography>
 
                             {images.length > 0 && (

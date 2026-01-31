@@ -25,6 +25,9 @@ import {
     Tabs,
     Tab,
     Avatar,
+    TextField,
+    Grid,
+    Divider,
 } from '@mui/material'
 import {
     Visibility,
@@ -32,23 +35,14 @@ import {
     CheckCircle,
     Cancel,
     Refresh,
+    Chat,
+    ShoppingBag,
 } from '@mui/icons-material'
+import { useNavigate } from 'react-router-dom'
 import { LoadingSpinner } from '../../components/common/LoadingSpinner'
+import { orderService, Order } from '../../services/orderService'
 
-interface Order {
-    id: string
-    buyer_name: string
-    buyer_email: string
-    product_name: string
-    quantity: number
-    unit: string
-    total_amount: number
-    status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
-    created_at: string
-    updated_at: string
-}
-
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string): 'warning' | 'info' | 'primary' | 'success' | 'error' | 'default' => {
     switch (status) {
         case 'pending': return 'warning'
         case 'confirmed': return 'info'
@@ -60,6 +54,7 @@ const getStatusColor = (status: string) => {
 }
 
 export const ManageOrdersPage: React.FC = () => {
+    const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [orders, setOrders] = useState<Order[]>([])
@@ -67,6 +62,9 @@ export const ManageOrdersPage: React.FC = () => {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
     const [statusFilter, setStatusFilter] = useState('all')
+    const [actionLoading, setActionLoading] = useState(false)
+    const [trackingNumber, setTrackingNumber] = useState('')
+    const [estimatedDelivery, setEstimatedDelivery] = useState('')
 
     useEffect(() => {
         loadOrders()
@@ -76,77 +74,39 @@ export const ManageOrdersPage: React.FC = () => {
         setLoading(true)
         setError(null)
         try {
-            // Mock orders data - in production, this would come from an API
-            const mockOrders: Order[] = [
-                {
-                    id: 'ORD001',
-                    buyer_name: 'Rahul Kumar',
-                    buyer_email: 'rahul@example.com',
-                    product_name: 'Fresh Tomatoes',
-                    quantity: 10,
-                    unit: 'kg',
-                    total_amount: 500,
-                    status: 'pending',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                },
-                {
-                    id: 'ORD002',
-                    buyer_name: 'Priya Sharma',
-                    buyer_email: 'priya@example.com',
-                    product_name: 'Organic Potatoes',
-                    quantity: 20,
-                    unit: 'kg',
-                    total_amount: 800,
-                    status: 'confirmed',
-                    created_at: new Date(Date.now() - 86400000).toISOString(),
-                    updated_at: new Date().toISOString(),
-                },
-                {
-                    id: 'ORD003',
-                    buyer_name: 'Amit Patel',
-                    buyer_email: 'amit@example.com',
-                    product_name: 'Green Chilies',
-                    quantity: 5,
-                    unit: 'kg',
-                    total_amount: 250,
-                    status: 'shipped',
-                    created_at: new Date(Date.now() - 172800000).toISOString(),
-                    updated_at: new Date().toISOString(),
-                },
-                {
-                    id: 'ORD004',
-                    buyer_name: 'Sneha Gupta',
-                    buyer_email: 'sneha@example.com',
-                    product_name: 'Fresh Carrots',
-                    quantity: 15,
-                    unit: 'kg',
-                    total_amount: 600,
-                    status: 'delivered',
-                    created_at: new Date(Date.now() - 259200000).toISOString(),
-                    updated_at: new Date().toISOString(),
-                },
-            ]
-            setOrders(mockOrders)
+            const response = await orderService.getVendorOrders()
+            setOrders(response.orders)
         } catch (err) {
-            setError('Failed to load orders')
+            console.error('Failed to load orders:', err)
+            setError(err instanceof Error ? err.message : 'Failed to load orders')
         } finally {
             setLoading(false)
         }
     }
 
     const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+        setActionLoading(true)
         try {
-            // In production, this would be an API call
-            setOrders(prev => prev.map(order => 
-                order.id === orderId 
-                    ? { ...order, status: newStatus as Order['status'], updated_at: new Date().toISOString() }
-                    : order
-            ))
+            const trackingInfo = newStatus === 'shipped' ? {
+                tracking_number: trackingNumber || undefined,
+                estimated_delivery: estimatedDelivery || undefined,
+            } : undefined
+            
+            await orderService.updateOrderStatus(orderId, newStatus, trackingInfo)
             setDetailsOpen(false)
+            setTrackingNumber('')
+            setEstimatedDelivery('')
+            loadOrders()
         } catch (err) {
-            setError('Failed to update order status')
+            console.error('Failed to update order:', err)
+            setError(err instanceof Error ? err.message : 'Failed to update order status')
+        } finally {
+            setActionLoading(false)
         }
+    }
+
+    const handleContactBuyer = (order: Order) => {
+        navigate(`/chat?buyer=${order.buyer_id}&product=${order.product_id}`)
     }
 
     const filteredOrders = orders.filter(order => {
@@ -236,7 +196,8 @@ export const ManageOrdersPage: React.FC = () => {
                             <TableCell>Customer</TableCell>
                             <TableCell>Product</TableCell>
                             <TableCell>Quantity</TableCell>
-                            <TableCell>Amount</TableCell>
+                            <TableCell>Offer</TableCell>
+                            <TableCell>Total</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>Date</TableCell>
                             <TableCell>Actions</TableCell>
@@ -245,31 +206,58 @@ export const ManageOrdersPage: React.FC = () => {
                     <TableBody>
                         {filteredOrders.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                                    <Typography color="text.secondary">
+                                <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
+                                    <ShoppingBag sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                                    <Typography color="text.secondary" variant="h6">
                                         No orders found
+                                    </Typography>
+                                    <Typography color="text.secondary" variant="body2">
+                                        Orders from buyers will appear here
                                     </Typography>
                                 </TableCell>
                             </TableRow>
                         ) : (
                             filteredOrders.map((order) => (
-                                <TableRow key={order.id}>
-                                    <TableCell>{order.id}</TableCell>
+                                <TableRow key={order.id} hover>
+                                    <TableCell>
+                                        <Typography variant="body2" fontWeight={500}>
+                                            #{order.id.slice(0, 8)}
+                                        </Typography>
+                                    </TableCell>
                                     <TableCell>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Avatar sx={{ width: 32, height: 32 }}>
-                                                {order.buyer_name.charAt(0)}
+                                                {order.buyer_name?.charAt(0) || 'B'}
                                             </Avatar>
-                                            {order.buyer_name}
+                                            <Box>
+                                                <Typography variant="body2">{order.buyer_name || 'Unknown'}</Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {order.buyer_email}
+                                                </Typography>
+                                            </Box>
                                         </Box>
                                     </TableCell>
-                                    <TableCell>{order.product_name}</TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Avatar 
+                                                src={order.product_image} 
+                                                variant="rounded"
+                                                sx={{ width: 40, height: 40 }}
+                                            >
+                                                <ShoppingBag />
+                                            </Avatar>
+                                            <Typography variant="body2">{order.product_name}</Typography>
+                                        </Box>
+                                    </TableCell>
                                     <TableCell>{order.quantity} {order.unit}</TableCell>
-                                    <TableCell>₹{order.total_amount}</TableCell>
+                                    <TableCell>₹{order.offered_price}/{order.unit}</TableCell>
+                                    <TableCell>
+                                        <Typography fontWeight={500}>₹{order.total_amount.toLocaleString()}</Typography>
+                                    </TableCell>
                                     <TableCell>
                                         <Chip 
                                             label={order.status.charAt(0).toUpperCase() + order.status.slice(1)} 
-                                            color={getStatusColor(order.status) as any}
+                                            color={getStatusColor(order.status)}
                                             size="small"
                                         />
                                     </TableCell>
@@ -281,8 +269,16 @@ export const ManageOrdersPage: React.FC = () => {
                                                 setSelectedOrder(order)
                                                 setDetailsOpen(true)
                                             }}
+                                            title="View Details"
                                         >
                                             <Visibility />
+                                        </IconButton>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleContactBuyer(order)}
+                                            title="Contact Buyer"
+                                        >
+                                            <Chat />
                                         </IconButton>
                                     </TableCell>
                                 </TableRow>
@@ -297,34 +293,94 @@ export const ManageOrdersPage: React.FC = () => {
                 <DialogTitle>Order Details</DialogTitle>
                 <DialogContent>
                     {selectedOrder && (
-                        <Box>
-                            <Typography variant="subtitle2" color="text.secondary">Order ID</Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>{selectedOrder.id}</Typography>
+                        <Box sx={{ pt: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                <Avatar 
+                                    src={selectedOrder.product_image} 
+                                    variant="rounded"
+                                    sx={{ width: 80, height: 80 }}
+                                >
+                                    <ShoppingBag />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="h6">{selectedOrder.product_name}</Typography>
+                                    <Chip
+                                        label={selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                                        color={getStatusColor(selectedOrder.status)}
+                                        size="small"
+                                    />
+                                </Box>
+                            </Box>
+                            
+                            <Divider sx={{ my: 2 }} />
 
-                            <Typography variant="subtitle2" color="text.secondary">Customer</Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>
-                                {selectedOrder.buyer_name} ({selectedOrder.buyer_email})
-                            </Typography>
-
-                            <Typography variant="subtitle2" color="text.secondary">Product</Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>
-                                {selectedOrder.product_name} - {selectedOrder.quantity} {selectedOrder.unit}
-                            </Typography>
-
-                            <Typography variant="subtitle2" color="text.secondary">Total Amount</Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>₹{selectedOrder.total_amount}</Typography>
-
-                            <Typography variant="subtitle2" color="text.secondary">Current Status</Typography>
-                            <Chip 
-                                label={selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)} 
-                                color={getStatusColor(selectedOrder.status) as any}
-                                sx={{ mb: 2 }}
-                            />
+                            <Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    <Typography variant="body2" color="text.secondary">Order ID</Typography>
+                                    <Typography variant="body1">#{selectedOrder.id.slice(0, 8)}</Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="body2" color="text.secondary">Customer</Typography>
+                                    <Typography variant="body1">{selectedOrder.buyer_name}</Typography>
+                                    <Typography variant="caption" color="text.secondary">{selectedOrder.buyer_email}</Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="body2" color="text.secondary">Quantity</Typography>
+                                    <Typography variant="body1">{selectedOrder.quantity} {selectedOrder.unit}</Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="body2" color="text.secondary">Original Price</Typography>
+                                    <Typography variant="body1">₹{selectedOrder.original_price}/{selectedOrder.unit}</Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="body2" color="text.secondary">Offered Price</Typography>
+                                    <Typography variant="body1" color="primary.main" fontWeight={500}>
+                                        ₹{selectedOrder.offered_price}/{selectedOrder.unit}
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="body2" color="text.secondary">Total Amount</Typography>
+                                    <Typography variant="h6" color="success.main">₹{selectedOrder.total_amount.toLocaleString()}</Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="body2" color="text.secondary">Ordered On</Typography>
+                                    <Typography variant="body1">{formatDate(selectedOrder.created_at)}</Typography>
+                                </Grid>
+                                {selectedOrder.message && (
+                                    <Grid item xs={12}>
+                                        <Typography variant="body2" color="text.secondary">Buyer's Message</Typography>
+                                        <Typography variant="body1">{selectedOrder.message}</Typography>
+                                    </Grid>
+                                )}
+                            </Grid>
 
                             {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
                                 <Box sx={{ mt: 3 }}>
-                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Update Status</Typography>
-                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Divider sx={{ mb: 2 }} />
+                                    <Typography variant="subtitle1" fontWeight={500} sx={{ mb: 2 }}>Update Status</Typography>
+                                    
+                                    {selectedOrder.status === 'confirmed' && (
+                                        <Box sx={{ mb: 2 }}>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                label="Tracking Number (optional)"
+                                                value={trackingNumber}
+                                                onChange={(e) => setTrackingNumber(e.target.value)}
+                                                sx={{ mb: 2 }}
+                                            />
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                label="Estimated Delivery (optional)"
+                                                value={estimatedDelivery}
+                                                onChange={(e) => setEstimatedDelivery(e.target.value)}
+                                                placeholder="e.g., 2-3 business days"
+                                            />
+                                        </Box>
+                                    )}
+                                    
+                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                                         {selectedOrder.status === 'pending' && (
                                             <>
                                                 <Button
@@ -332,16 +388,18 @@ export const ManageOrdersPage: React.FC = () => {
                                                     color="success"
                                                     startIcon={<CheckCircle />}
                                                     onClick={() => handleUpdateStatus(selectedOrder.id, 'confirmed')}
+                                                    disabled={actionLoading}
                                                 >
-                                                    Confirm
+                                                    Accept Order
                                                 </Button>
                                                 <Button
                                                     variant="outlined"
                                                     color="error"
                                                     startIcon={<Cancel />}
                                                     onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
+                                                    disabled={actionLoading}
                                                 >
-                                                    Cancel
+                                                    Reject
                                                 </Button>
                                             </>
                                         )}
@@ -350,6 +408,7 @@ export const ManageOrdersPage: React.FC = () => {
                                                 variant="contained"
                                                 startIcon={<LocalShipping />}
                                                 onClick={() => handleUpdateStatus(selectedOrder.id, 'shipped')}
+                                                disabled={actionLoading}
                                             >
                                                 Mark as Shipped
                                             </Button>
@@ -360,6 +419,7 @@ export const ManageOrdersPage: React.FC = () => {
                                                 color="success"
                                                 startIcon={<CheckCircle />}
                                                 onClick={() => handleUpdateStatus(selectedOrder.id, 'delivered')}
+                                                disabled={actionLoading}
                                             >
                                                 Mark as Delivered
                                             </Button>
@@ -371,6 +431,9 @@ export const ManageOrdersPage: React.FC = () => {
                     )}
                 </DialogContent>
                 <DialogActions>
+                    <Button onClick={() => selectedOrder && handleContactBuyer(selectedOrder)}>
+                        <Chat sx={{ mr: 1 }} /> Contact Buyer
+                    </Button>
                     <Button onClick={() => setDetailsOpen(false)}>Close</Button>
                 </DialogActions>
             </Dialog>

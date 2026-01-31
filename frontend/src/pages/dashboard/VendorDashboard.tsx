@@ -36,6 +36,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { productService } from '../../services/productService'
+import { orderService } from '../../services/orderService'
 import { LoadingSpinner } from '../../components/common/LoadingSpinner'
 
 interface DashboardStats {
@@ -98,8 +99,19 @@ export const VendorDashboard: React.FC = () => {
                 totalSales: (user as any)?.total_transactions || 0,
                 revenue: products.reduce((sum: number, p: any) => sum + ((p.basePrice || 0) * (p.salesCount || 0)), 0),
                 rating: (user as any)?.rating || 4.5,
-                pendingOrders: Math.floor(Math.random() * 5), // Mock data
+                pendingOrders: 0, // Will be updated from order API
             })
+
+            // Fetch actual pending orders count
+            try {
+                const ordersResponse = await orderService.getVendorOrders('pending')
+                setStats(prev => ({
+                    ...prev,
+                    pendingOrders: ordersResponse.total
+                }))
+            } catch (err) {
+                console.log('Could not fetch order stats')
+            }
 
             // Get recent products
             setRecentProducts(products.slice(0, 5).map((p: any) => {

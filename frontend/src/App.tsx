@@ -25,6 +25,7 @@ import { ManageOrdersPage } from './pages/vendor/ManageOrdersPage'
 import { DealsManagementPage } from './pages/vendor/DealsManagementPage'
 import { SavedItemsPage } from './pages/buyer/SavedItemsPage'
 import { OrderHistoryPage } from './pages/buyer/OrderHistoryPage'
+import { BuyerOrdersPage } from './pages/buyer/BuyerOrdersPage'
 
 function App() {
     const { isLoading } = useAuth()
@@ -77,6 +78,7 @@ function App() {
                     <Route element={<ProtectedRoute requiredRole="BUYER" />}>
                         <Route path="saved-items" element={<SavedItemsPage />} />
                         <Route path="order-history" element={<OrderHistoryPage />} />
+                        <Route path="buyer/orders" element={<BuyerOrdersPage />} />
                     </Route>
                 </Route>
 

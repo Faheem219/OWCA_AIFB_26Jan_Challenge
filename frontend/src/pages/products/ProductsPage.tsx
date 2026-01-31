@@ -96,26 +96,44 @@ export const ProductsPage: React.FC = () => {
     // Update URL parameters
     const updateSearchParams = (newParams: Partial<ProductSearchQuery>) => {
         const params = new URLSearchParams(searchParams)
-        const paramKeys = Object.keys(newParams)
+        
+        // Map API query keys to URL parameter keys
+        const keyMapping: Record<string, string> = {
+            query: 'q',
+            quality_grades: 'quality',
+            latitude: 'lat',
+            longitude: 'lng',
+            radius_km: 'radius',
+            available_only: 'available',
+            organic_only: 'organic',
+            sort_by: 'sort',
+            sort_order: 'order'
+        }
 
         Object.entries(newParams).forEach(([key, value]) => {
+            // Skip internal params like language, limit, skip
+            if (key === 'language' || key === 'limit' || key === 'skip') {
+                return
+            }
+            
+            const urlKey = keyMapping[key] || key
+            
             if (value !== undefined && value !== null && value !== '') {
                 if (Array.isArray(value)) {
-                    params.set(key, value.join(','))
+                    params.set(urlKey, value.join(','))
+                } else if (typeof value === 'boolean') {
+                    params.set(urlKey, value.toString())
                 } else {
-                    params.set(key, value.toString())
+                    params.set(urlKey, value.toString())
                 }
             } else {
-                params.delete(key)
+                params.delete(urlKey)
             }
         })
 
-        // Reset page when search parameters change (not for pagination params)
-        const isPaginationChange = paramKeys.every(k => k === 'skip' || k === 'limit')
-        if (!isPaginationChange) {
-            params.delete('page')
-            setCurrentPage(1)
-        }
+        // Reset page when search parameters change
+        params.delete('page')
+        setCurrentPage(1)
 
         setSearchParams(params)
     }

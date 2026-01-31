@@ -208,8 +208,9 @@ class Product(BaseModel):
     
     @validator("images")
     def validate_images(cls, v):
+        # Images are optional - they can be uploaded later
         if not v:
-            raise ValueError("At least one product image is required")
+            return v
         
         # Check that only one image is marked as primary
         primary_count = sum(1 for img in v if img.is_primary)

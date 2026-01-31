@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Container, Box, Alert, CircularProgress, Snackbar } from '@mui/material'
 import { ProductDetailView } from '../../components/products/ProductDetailView'
 import { productService } from '../../services/productService'
-import { chatService } from '../../services/chatService'
+import { orderService } from '../../services/orderService'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { Product } from '../../types'
 
@@ -104,29 +104,30 @@ export const ProductDetailPage: React.FC = () => {
 
     const handleMakeOffer = async (offerProduct: Product, offer: { amount: number; quantity: number; message: string }) => {
         try {
-            // Create or get conversation with vendor
-            const conversation = await chatService.createConversation(offerProduct.vendorId, offerProduct.id)
-            
-            // Send offer message
-            const offerMessage = `🤝 **New Offer**\n\nProduct: ${offerProduct.name.originalText}\nOffered Price: ₹${offer.amount} per ${offerProduct.unit}\nQuantity: ${offer.quantity} ${offerProduct.unit}\nTotal: ₹${offer.amount * offer.quantity}\n\n${offer.message ? `Message: ${offer.message}` : ''}`
-            
-            await chatService.sendMessage(conversation.id, offerMessage)
+            // Create actual order with the offer
+            await orderService.createOrder({
+                product_id: offerProduct.id,
+                vendor_id: offerProduct.vendorId,
+                quantity: offer.quantity,
+                offered_price: offer.amount,
+                message: offer.message || '',
+            })
             
             setSnackbar({
                 open: true,
-                message: 'Offer sent successfully! Check your messages.',
+                message: 'Order placed successfully! The vendor will review your offer.',
                 severity: 'success'
             })
             
-            // Navigate to chat after a short delay
+            // Navigate to buyer orders page after a short delay
             setTimeout(() => {
-                navigate(`/chat?vendor=${offerProduct.vendorId}&product=${offerProduct.id}`)
+                navigate('/buyer/orders')
             }, 1500)
         } catch (err) {
-            console.error('Failed to send offer:', err)
+            console.error('Failed to place order:', err)
             setSnackbar({
                 open: true,
-                message: 'Failed to send offer. Please try again.',
+                message: 'Failed to place order. Please try again.',
                 severity: 'error'
             })
         }

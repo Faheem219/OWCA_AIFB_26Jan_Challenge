@@ -73,7 +73,7 @@ export const Header: React.FC = () => {
                         <Notifications />
                     </IconButton>
                     {user.role !== 'VENDOR' && (
-                        <IconButton color="inherit" component={RouterLink} to="/cart">
+                        <IconButton color="inherit" component={RouterLink} to="/buyer/orders">
                             <ShoppingCart />
                         </IconButton>
                     )}
@@ -171,10 +171,20 @@ export const Header: React.FC = () => {
                 <MenuItem onClick={() => { navigate('/dashboard'); handleMenuClose() }}>
                     {t('navigation.dashboard')}
                 </MenuItem>
-                {user?.role === 'VENDOR' && (
-                    <MenuItem onClick={() => { navigate('/products/create'); handleMenuClose() }}>
-                        {t('products.addProduct', 'Add Product')}
+                {user?.role === 'BUYER' && (
+                    <MenuItem onClick={() => { navigate('/buyer/orders'); handleMenuClose() }}>
+                        My Orders
                     </MenuItem>
+                )}
+                {user?.role === 'VENDOR' && (
+                    <>
+                        <MenuItem onClick={() => { navigate('/orders'); handleMenuClose() }}>
+                            Manage Orders
+                        </MenuItem>
+                        <MenuItem onClick={() => { navigate('/products/create'); handleMenuClose() }}>
+                            {t('products.addProduct', 'Add Product')}
+                        </MenuItem>
+                    </>
                 )}
                 <MenuItem onClick={handleLogout}>
                     {t('navigation.logout')}
@@ -209,10 +219,20 @@ export const Header: React.FC = () => {
                         <MenuItem onClick={() => { navigate('/profile'); handleMenuClose() }}>
                             {t('navigation.profile')}
                         </MenuItem>
-                        {user.role === 'VENDOR' && (
-                            <MenuItem onClick={() => { navigate('/products/create'); handleMenuClose() }}>
-                                {t('products.addProduct', 'Add Product')}
+                        {user.role === 'BUYER' && (
+                            <MenuItem onClick={() => { navigate('/buyer/orders'); handleMenuClose() }}>
+                                My Orders
                             </MenuItem>
+                        )}
+                        {user.role === 'VENDOR' && (
+                            <>
+                                <MenuItem onClick={() => { navigate('/orders'); handleMenuClose() }}>
+                                    Manage Orders
+                                </MenuItem>
+                                <MenuItem onClick={() => { navigate('/products/create'); handleMenuClose() }}>
+                                    {t('products.addProduct', 'Add Product')}
+                                </MenuItem>
+                            </>
                         )}
                         <MenuItem onClick={handleLogout}>
                             {t('navigation.logout')}

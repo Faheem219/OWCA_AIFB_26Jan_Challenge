@@ -763,8 +763,9 @@ class ProductService:
         if product_data.maximum_order and product_data.maximum_order < product_data.minimum_order:
             raise ValidationException("Maximum order cannot be less than minimum order")
         
-        if not product_data.image_urls:
-            raise ValidationException("At least one product image is required")
+        # Images are optional - they can be uploaded later via the image upload endpoint
+        # if not product_data.image_urls:
+        #     raise ValidationException("At least one product image is required")
     
     async def _create_product_location(
         self,

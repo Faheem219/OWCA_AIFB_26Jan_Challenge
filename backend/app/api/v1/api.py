@@ -16,6 +16,7 @@ from app.api.v1.endpoints import (
     price_discovery,
     payments,
     health,
+    orders,
 )
 
 # Create main API router
@@ -68,4 +69,10 @@ api_router.include_router(
     payments.router,
     prefix="/payments",
     tags=["payments"]
+)
+
+api_router.include_router(
+    orders.router,
+    prefix="/orders",
+    tags=["orders"]
 )
